@@ -7,8 +7,9 @@ node_modules/
 /coverage
 
 # Production
-/build
 /dist
+/client/build/*
+!/client/build/.gitkeep
 
 # Environment variables
 .env

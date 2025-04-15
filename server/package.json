@@ -1,15 +1,14 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "Backend server for supplier application",
-  "main": "dist/index.js",
+  "description": "GracefulCare Backend Server",
+  "main": "src/index.js",
+  "type": "module",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon src/index.ts",
-    "build": "tsc",
-    "test": "jest",
-    "lint": "eslint . --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "deploy": "wrangler deploy",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -22,16 +21,19 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.3",
     "multer": "^1.4.5-lts.1",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "hono": "^3.3.2"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230807.0",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.0",
+    "@types/multer": "^1.4.7",
     "@types/node": "^18.15.11",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
-    "eslint": "^8.37.0",
+    "eslint": "^8.38.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^29.5.0",
@@ -39,6 +41,7 @@
     "prettier": "^2.8.7",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.3"
+    "typescript": "^5.0.4",
+    "wrangler": "^3.0.0"
   }
 }
