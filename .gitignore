@@ -47,4 +47,9 @@ yarn-error.log*
 .rts2_cache_umd/
 
 # TypeScript
-*.tsbuildinfo 
+*.tsbuildinfo
+
+# Large files
+client/public/HomePage_Banner_Desktop.png
+client/public/GC_logo_GC_Logo_Vertical_Color-Photoroom.png
+client/public/GC_logo_GC_Logo_Horizontal_Color.png 
