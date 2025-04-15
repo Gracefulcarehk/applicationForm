@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { Formik, Form, Field, FieldArray, FormikErrors } from 'formik';
 import * as Yup from 'yup';
-import { Supplier, SupplierType, Gender, DateOfBirth, ProfessionalCertification } from '../types/supplier';
+import { Supplier, SupplierType, Gender, ProfessionalCertification } from '../types/supplier';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
