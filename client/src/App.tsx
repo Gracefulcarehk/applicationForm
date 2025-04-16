@@ -94,7 +94,7 @@ function App() {
           px: 4
         }}>
           <img 
-            src="/GC_logo_GC_Logo_Horizontal_Color.png" 
+            src={process.env.PUBLIC_URL + "/GC_logo_GC_Logo_Horizontal_Color.png"} 
             alt="GracefulCare Logo" 
             style={{ 
               height: '150px',
@@ -197,7 +197,7 @@ function App() {
                   }}
                 >
                   <img
-                    src="/HomePage_Banner_Desktop.png"
+                    src={process.env.PUBLIC_URL + "/HomePage_Banner_Desktop.png"}
                     alt="GracefulCare Banner"
                     style={{
                       width: '100%',
