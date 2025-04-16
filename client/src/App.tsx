@@ -197,7 +197,7 @@ function App() {
                   }}
                 >
                   <img
-                    src="/HomePage_Banner_Desktop.png"
+                    src={process.env.PUBLIC_URL + "/HomePage_Banner_Desktop.png"}
                     alt="GracefulCare Banner"
                     style={{
                       width: '100%',

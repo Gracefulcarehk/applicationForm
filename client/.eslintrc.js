@@ -1,9 +1,7 @@
 module.exports = {
-  extends: [
-    'react-app',
-    'react-app/jest'
-  ],
+  extends: ['react-app'],
   rules: {
-    'no-unused-expressions': 'off'
+    'no-unused-vars': 'warn',
+    '@typescript-eslint/no-unused-vars': 'warn'
   }
 }; 

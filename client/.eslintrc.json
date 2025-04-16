@@ -5,6 +5,7 @@
   ],
   "plugins": [],
   "rules": {
-    "prettier/prettier": "off"
+    "prettier/prettier": "off",
+    "@typescript-eslint/no-unused-expressions": "off"
   }
 } 
