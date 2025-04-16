@@ -5,19 +5,12 @@ import {
   Grid,
   TextField,
   Typography,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  FormHelperText,
   Paper,
   Snackbar,
   Alert,
-  useTheme,
 } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { hongKongBanks } from '../data/hongKongBanks';
 import { useNavigate } from 'react-router-dom';
 
 interface SupplierFormValues {
@@ -88,10 +81,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   initialValues = defaultValues,
   submitButtonText = '提交申請 Submit Application',
 }) => {
-  const theme = useTheme();
-  const [selectedFiles, setSelectedFiles] = useState<{ [key: number]: File | null }>({});
-  const [selectedBankFile, setSelectedBankFile] = useState<File | null>(null);
-  const [selectedIdCardFile, setSelectedIdCardFile] = useState<File | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -102,32 +91,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     severity: 'success',
   });
   const navigate = useNavigate();
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, index: number, setFieldValue: (field: string, value: any) => void) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Check file type
-      const fileType = file.type;
-      const isImage = fileType.startsWith('image/');
-      const isPDF = fileType === 'application/pdf';
-      
-      if (!isImage && !isPDF) {
-        setSelectedFiles(prev => ({ ...prev, [index]: null }));
-        setFieldValue(`professionalCertifications.${index}.fileUrl`, '');
-        return;
-      }
-
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setSelectedFiles(prev => ({ ...prev, [index]: null }));
-        setFieldValue(`professionalCertifications.${index}.fileUrl`, '');
-        return;
-      }
-
-      setSelectedFiles(prev => ({ ...prev, [index]: file }));
-      setFieldValue(`professionalCertifications.${index}.fileUrl`, URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = async (values: SupplierFormValues) => {
     try {
@@ -160,7 +123,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ errors, touched, values, setFieldValue }) => (
+          {({ errors, touched }) => (
             <Form>
               <Grid container spacing={3}>
                 {/* Company Information */}
