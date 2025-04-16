@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Container, Typography, Snackbar, Alert } from '@mui/material';
+import { Container, Typography, Snackbar, Alert, useMediaQuery, useTheme } from '@mui/material';
 import SupplierForm from '../components/SupplierForm';
 import FAQSection from '../components/FAQSection';
 import { supplierApi } from '../services/api';
 
 const SupplierApplication: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -33,16 +36,23 @@ const SupplierApplication: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+    <Container 
+      maxWidth="md" 
+      sx={{ 
+        mt: { xs: 2, sm: 4 }, 
+        mb: { xs: 2, sm: 4 },
+        px: { xs: 2, sm: 4 }
+      }}
+    >
       <Typography
-        variant="h4"
+        variant={isMobile ? "h5" : "h4"}
         component="h1"
         gutterBottom
         sx={{
-          fontSize: '2rem',
+          fontSize: isMobile ? '1.5rem' : '2rem',
           fontWeight: 700,
           color: '#000000',
-          mb: 4,
+          mb: { xs: 2, sm: 4 },
         }}
       >
         護理人員申請 Application for Personal Care Worker
@@ -53,6 +63,7 @@ const SupplierApplication: React.FC = () => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Box, Typography, Accordion, AccordionSummary, AccordionDetails, useMediaQuery, useTheme } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const faqItems = [
@@ -26,17 +26,24 @@ const faqItems = [
 ];
 
 const FAQSection: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
-    <Box sx={{ mt: 6, mb: 4 }}>
+    <Box sx={{ 
+      mt: { xs: 4, sm: 6 }, 
+      mb: { xs: 3, sm: 4 },
+      px: { xs: 2, sm: 4 }
+    }}>
       <Typography
-        variant="h5"
+        variant={isMobile ? "h6" : "h5"}
         component="h2"
         gutterBottom
         sx={{
-          fontSize: '1.5rem',
+          fontSize: isMobile ? '1.25rem' : '1.5rem',
           fontWeight: 700,
           color: '#000000',
-          mb: 3,
+          mb: { xs: 2, sm: 3 },
           textAlign: 'center'
         }}
       >
@@ -46,14 +53,14 @@ const FAQSection: React.FC = () => {
         <Accordion 
           key={index} 
           sx={{ 
-            mb: 2,
+            mb: { xs: 1.5, sm: 2 },
             boxShadow: 'none',
             border: '1px solid #e0e0e0',
             '&:before': {
               display: 'none',
             },
             '&.Mui-expanded': {
-              margin: '16px 0',
+              margin: { xs: '12px 0', sm: '16px 0' },
             }
           }}
         >
@@ -65,7 +72,7 @@ const FAQSection: React.FC = () => {
                 backgroundColor: '#f5f5f5'
               },
               '& .MuiAccordionSummary-content': {
-                margin: '12px 0'
+                margin: { xs: '8px 0', sm: '12px 0' }
               }
             }}
           >
@@ -73,7 +80,7 @@ const FAQSection: React.FC = () => {
               sx={{ 
                 fontWeight: 600,
                 color: '#000000',
-                fontSize: '1rem'
+                fontSize: isMobile ? '0.9rem' : '1rem'
               }}
             >
               {item.question}
@@ -82,13 +89,13 @@ const FAQSection: React.FC = () => {
           <AccordionDetails
             sx={{
               backgroundColor: '#ffffff',
-              padding: '16px 24px 24px'
+              padding: { xs: '12px 16px 16px', sm: '16px 24px 24px' }
             }}
           >
             <Typography
               sx={{
                 color: '#666666',
-                fontSize: '0.95rem',
+                fontSize: isMobile ? '0.85rem' : '0.95rem',
                 lineHeight: 1.6
               }}
             >

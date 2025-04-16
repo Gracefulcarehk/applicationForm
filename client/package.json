@@ -38,7 +38,8 @@
     "eslint": "^8.38.0",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.32.2",
-    "prettier": "^2.8.7"
+    "prettier": "^2.8.7",
+    "puppeteer": "^21.11.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -46,7 +47,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "audit:fix": "npm audit fix --force"
+    "audit:fix": "npm audit fix --force",
+    "test:responsive": "node scripts/test-responsive.js"
   },
   "browserslist": {
     "production": [
