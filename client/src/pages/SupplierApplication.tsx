@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Container, Typography, Snackbar, Alert, useMediaQuery, useTheme } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { createSupplier } from '../services/api';
 import SupplierForm from '../components/SupplierForm';
 import FAQSection from '../components/FAQSection';
-import { supplierApi } from '../services/api';
 
 const SupplierApplication: React.FC = () => {
   const theme = useTheme();
@@ -20,7 +21,7 @@ const SupplierApplication: React.FC = () => {
 
   const handleSubmit = async (values: any) => {
     try {
-      await supplierApi.createSupplier(values);
+      await createSupplier(values);
       setSnackbar({
         open: true,
         message: '申請已成功提交 Application submitted successfully',
