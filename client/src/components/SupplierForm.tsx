@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   Container,
@@ -8,6 +8,9 @@ import {
   Paper,
   Snackbar,
   Alert,
+  useTheme,
+  useMediaQuery,
+  Theme,
 } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -76,11 +79,126 @@ const defaultValues: SupplierFormValues = {
   businessRegistrationCertificate: null,
 };
 
+// Responsive styles using theme breakpoints
+const getResponsiveStyles = (theme: Theme) => ({
+  container: {
+    py: { xs: 2, sm: 3, md: 4 },
+    px: { xs: 2, sm: 3, md: 4 },
+    minHeight: '100vh',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    // Add safe area insets for modern browsers
+    paddingTop: 'env(safe-area-inset-top)',
+    paddingBottom: 'env(safe-area-inset-bottom)',
+    paddingLeft: 'env(safe-area-inset-left)',
+    paddingRight: 'env(safe-area-inset-right)',
+    // Fallback for older browsers
+    '@supports not (padding: env(safe-area-inset-top))': {
+      paddingTop: { xs: 'calc(2rem + env(safe-area-inset-top))', sm: '3rem', md: '4rem' },
+      paddingBottom: { xs: 'calc(2rem + env(safe-area-inset-bottom))', sm: '3rem', md: '4rem' },
+    },
+  },
+  paper: {
+    p: { xs: 2, sm: 3, md: 4 },
+    mt: { xs: 1, sm: 2, md: 4 },
+    width: '100%',
+    maxWidth: '100%',
+    mx: 'auto',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    minHeight: { xs: 'auto', sm: '80vh' },
+    // Ensure content doesn't get cut off by browser UI
+    maxHeight: { xs: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))', sm: 'none' },
+    overflowY: 'auto',
+    // Hide scrollbar but keep functionality
+    scrollbarWidth: 'none',
+    '&::-webkit-scrollbar': {
+      display: 'none',
+    },
+  },
+  form: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    // Prevent form from being cut off
+    minHeight: 'fit-content',
+  },
+  formContent: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    // Add padding to prevent content from being hidden behind browser UI
+    paddingBottom: { xs: 'env(safe-area-inset-bottom)', sm: 0 },
+  },
+  title: {
+    mb: { xs: 2, sm: 3, md: 4 },
+    // Ensure title is always visible
+    position: 'sticky',
+    top: 0,
+    zIndex: 1,
+    backgroundColor: 'background.paper',
+    paddingTop: { xs: 'env(safe-area-inset-top)', sm: 0 },
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    // Keep section titles visible while scrolling
+    position: 'sticky',
+    top: { xs: 'calc(3.5rem + env(safe-area-inset-top))', sm: '4rem' },
+    zIndex: 1,
+    backgroundColor: 'background.paper',
+    paddingTop: 1,
+    marginTop: -1,
+  },
+  textField: {
+    size: { xs: 'small', sm: 'medium' } as const,
+  },
+  button: {
+    py: { xs: 1, sm: 1.25, md: 1.5 },
+    fontSize: { xs: '0.875rem', sm: '1rem' },
+    mt: 'auto',
+    // Ensure button is always visible and not hidden by browser UI
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 1,
+    backgroundColor: 'background.paper',
+    paddingBottom: { xs: 'env(safe-area-inset-bottom)', sm: 0 },
+  },
+  gridSpacing: { xs: 2, sm: 3 },
+  multilineRows: { xs: 2, sm: 3 },
+  gridContainer: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column' as const,
+  },
+});
+
 const SupplierForm: React.FC<SupplierFormProps> = ({
   onSubmit,
   initialValues = defaultValues,
   submitButtonText = '提交申請 Submit Application',
 }) => {
+  const theme = useTheme();
+  const styles = getResponsiveStyles(theme);
+  
+  // Consistent breakpoint detection
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  
+  // Add viewport height detection for mobile browsers
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportHeight(window.innerHeight);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -113,9 +231,22 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   };
 
   return (
-    <Container maxWidth="md">
-      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center">
+    <Container 
+      maxWidth="md" 
+      sx={{
+        ...styles.container,
+        // Dynamic height adjustment for mobile browsers
+        minHeight: isMobile ? `${viewportHeight}px` : '100vh',
+      }}
+    >
+      <Paper elevation={3} sx={styles.paper}>
+        <Typography
+          variant={isMobile ? "h5" : "h4"}
+          component="h1"
+          gutterBottom
+          align="center"
+          sx={styles.title}
+        >
           供應商申請表 Supplier Application Form
         </Typography>
         <Formik
@@ -124,32 +255,87 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
           onSubmit={handleSubmit}
         >
           {({ errors, touched }) => (
-            <Form>
-              <Grid container spacing={3}>
+            <Form style={styles.form}>
+              <Grid container spacing={styles.gridSpacing} sx={styles.gridContainer}>
                 {/* Company Information */}
                 <Grid item xs={12}>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography
+                    variant={isMobile ? "subtitle1" : "h6"}
+                    gutterBottom
+                    sx={styles.sectionTitle}
+                  >
                     公司資料 Company Information
                   </Typography>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sm={6}>
                   <Field
                     as={TextField}
                     name="companyName"
                     label="公司名稱 Company Name"
                     fullWidth
+                    size={isMobile ? "small" : "medium"}
                     error={touched.companyName && Boolean(errors.companyName)}
                     helperText={touched.companyName && errors.companyName}
                   />
                 </Grid>
-                {/* ... rest of the form fields ... */}
+                <Grid item xs={12} sm={6}>
+                  <Field
+                    as={TextField}
+                    name="contactPerson"
+                    label="聯絡人姓名 Contact Person"
+                    fullWidth
+                    size={isMobile ? "small" : "medium"}
+                    error={touched.contactPerson && Boolean(errors.contactPerson)}
+                    helperText={touched.contactPerson && errors.contactPerson}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Field
+                    as={TextField}
+                    name="email"
+                    label="電郵地址 Email"
+                    fullWidth
+                    size={isMobile ? "small" : "medium"}
+                    error={touched.email && Boolean(errors.email)}
+                    helperText={touched.email && errors.email}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Field
+                    as={TextField}
+                    name="phone"
+                    label="電話號碼 Phone"
+                    fullWidth
+                    size={isMobile ? "small" : "medium"}
+                    error={touched.phone && Boolean(errors.phone)}
+                    helperText={touched.phone && errors.phone}
+                  />
+                </Grid>
                 <Grid item xs={12}>
+                  <Field
+                    as={TextField}
+                    name="address"
+                    label="地址 Address"
+                    fullWidth
+                    multiline
+                    rows={styles.multilineRows}
+                    size={isMobile ? "small" : "medium"}
+                    error={touched.address && Boolean(errors.address)}
+                    helperText={touched.address && errors.address}
+                  />
+                </Grid>
+                {/* ... rest of the form fields ... */}
+                <Grid item xs={12} sx={styles.button}>
                   <Button
                     type="submit"
                     variant="contained"
                     color="primary"
                     fullWidth
-                    size="large"
+                    size={isMobile ? "medium" : "large"}
+                    sx={{
+                      py: styles.button.py,
+                      fontSize: styles.button.fontSize,
+                    }}
                   >
                     {submitButtonText}
                   </Button>
@@ -163,6 +349,14 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{
+          vertical: isMobile ? 'bottom' : 'top',
+          horizontal: 'center',
+        }}
+        // Adjust snackbar position to account for browser UI
+        sx={{
+          bottom: { xs: 'env(safe-area-inset-bottom)', sm: 0 },
+        }}
       >
         <Alert
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
