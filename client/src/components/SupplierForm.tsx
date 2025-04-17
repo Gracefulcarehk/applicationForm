@@ -199,14 +199,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     onSubmit: handleSubmit,
   });
 
-  const handleDateChange = (date: Date | null, field: string) => {
-    if (date) {
-      formik.setFieldValue(field, format(date, 'yyyy-MM-dd'));
-    } else {
-      formik.setFieldValue(field, '');
-    }
-  };
-
   return (
     <Box
       sx={{
