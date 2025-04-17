@@ -6,9 +6,6 @@ const API_URL = process.env.REACT_APP_API_URL || 'https://www.mixtech.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Add response interceptor for error handling
@@ -33,9 +30,13 @@ api.interceptors.response.use(
 );
 
 export const supplierApi = {
-  createSupplier: async (supplier: Omit<Supplier, '_id'>) => {
+  createSupplier: async (formData: FormData) => {
     try {
-      const response = await api.post('/suppliers', supplier);
+      const response = await api.post('/suppliers', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Error creating supplier:', error);

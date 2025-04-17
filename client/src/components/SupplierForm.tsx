@@ -334,10 +334,45 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
   const handleSubmit = async (values: Omit<Supplier, '_id'>) => {
     try {
+      // Create FormData to handle file uploads
+      const formData = new FormData();
+      
+      // Add all non-file fields to formData
+      Object.entries(values).forEach(([key, value]) => {
+        if (key !== 'idCardFileUrl' && key !== 'professionalCertifications' && key !== 'bankAccount') {
+          if (typeof value === 'object') {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value);
+          }
+        }
+      });
+
+      // Handle ID card file
+      if (selectedIdCardFile) {
+        formData.append('idCardFile', selectedIdCardFile);
+      }
+
+      // Handle bank account file
+      if (selectedBankFile) {
+        formData.append('bankFile', selectedBankFile);
+      }
+
+      // Handle professional certification files
+      values.professionalCertifications.forEach((cert, index) => {
+        const file = selectedFiles[index];
+        if (file) {
+          formData.append(`certificationFiles`, file);
+        }
+      });
+
+      // Add bank account info
+      formData.append('bankAccount', JSON.stringify(values.bankAccount));
+
       if (onSubmit) {
         await onSubmit(values);
       } else {
-        await supplierApi.createSupplier(values);
+        await supplierApi.createSupplier(formData);
       }
       
       // Show success message
