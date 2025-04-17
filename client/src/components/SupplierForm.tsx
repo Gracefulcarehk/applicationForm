@@ -123,11 +123,8 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   const [selectedIdCardFile, setSelectedIdCardFile] = useState<File | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
   useEffect(() => {
@@ -729,10 +726,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   variant="contained"
                   color="primary"
                   size="large"
-                  disabled={isSubmitting}
                   fullWidth={isMobile}
                 >
-                  {isSubmitting ? 'Submitting...' : submitButtonText}
+                  Submit
                 </Button>
               </Box>
             </Grid>
