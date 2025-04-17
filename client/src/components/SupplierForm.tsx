@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -10,6 +10,8 @@ import {
   IconButton,
   Snackbar,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { Formik, Form, Field, FieldArray, FormikErrors } from 'formik';
 import * as Yup from 'yup';
@@ -21,6 +23,7 @@ import { format, parse } from 'date-fns';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { supplierApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const validationSchema = Yup.object({
   supplierType: Yup.string().required('請選擇供應商類型 Please select supplier type'),
@@ -174,6 +177,10 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   onSubmit,
   submitButtonText = '提交申請 Submit Application',
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [viewportHeight, setViewportHeight] = useState<number>(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<{ [key: number]: File | null }>({});
   const [fileErrors, setFileErrors] = useState<{ [key: number]: string }>({});
   const [selectedBankFile, setSelectedBankFile] = useState<File | null>(null);
@@ -189,6 +196,28 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     message: '',
     severity: 'success',
   });
+  const navigate = useNavigate();
+
+  // Track viewport height changes
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      setViewportHeight(window.innerHeight);
+    };
+
+    updateViewportHeight();
+    window.addEventListener('resize', updateViewportHeight);
+    return () => window.removeEventListener('resize', updateViewportHeight);
+  }, []);
+
+  // Track scroll position for sticky elements
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, index: number, setFieldValue: (field: string, value: any) => void) => {
     const file = event.target.files?.[0];
@@ -310,29 +339,59 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       } else {
         await supplierApi.createSupplier(values);
       }
+      
+      // Show success message
       setSnackbar({
         open: true,
         message: '申請已成功提交 Application submitted successfully',
         severity: 'success',
       });
+
+      // Navigate to thank you page after a short delay
+      setTimeout(() => {
+        navigate('/thank-you');
+      }, 2000);
+
     } catch (error) {
+      console.error('Form submission error:', error);
       setSnackbar({
         open: true,
-        message: '提交申請時發生錯誤 Error submitting application',
+        message: error instanceof Error ? error.message : '提交申請時發生錯誤 Error submitting application',
         severity: 'error',
       });
     }
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3 }}>
+    <Paper 
+      elevation={3} 
+      sx={{ 
+        p: { xs: 2, sm: 3 },
+        minHeight: { xs: '100vh', sm: 'auto' },
+        display: 'flex',
+        flexDirection: 'column',
+        '@supports (padding: max(0px))': {
+          padding: {
+            xs: `max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right))`,
+            sm: '24px',
+          },
+        },
+      }}
+    >
       <Typography 
         variant="h4" 
         gutterBottom 
         sx={{ 
-          fontSize: '1.75rem',
+          fontSize: { xs: '1.5rem', sm: '1.75rem' },
           fontWeight: 700,
-          color: '#000000'
+          color: '#000000',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          backgroundColor: 'background.paper',
+          padding: { xs: '16px 0', sm: '24px 0' },
+          marginBottom: { xs: '16px', sm: '24px' },
+          borderBottom: isScrolled ? '1px solid rgba(0, 0, 0, 0.12)' : 'none',
         }}
       >
         申請人資料 Applicant Information
@@ -344,7 +403,17 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       >
         {({ errors, touched, isSubmitting, values, setFieldValue }) => (
           <Form>
-            <Grid container spacing={3}>
+            <Grid 
+              container 
+              spacing={{ xs: 2, sm: 3 }}
+              sx={{
+                flex: 1,
+                minHeight: { xs: `calc(${viewportHeight}px - 200px)`, sm: 'auto' },
+                '@supports (min-height: -webkit-fill-available)': {
+                  minHeight: { xs: '-webkit-fill-available', sm: 'auto' },
+                },
+              }}
+            >
               <Grid item xs={12}>
                 <Field
                   name="supplierType"
@@ -368,14 +437,20 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   variant="h6" 
                   gutterBottom 
                   sx={{ 
-                    fontSize: '1.25rem',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
                     fontWeight: 700,
-                    color: '#000000'
+                    color: '#000000',
+                    position: 'sticky',
+                    top: { xs: '60px', sm: '80px' },
+                    zIndex: 1,
+                    backgroundColor: 'background.paper',
+                    padding: { xs: '8px 0', sm: '16px 0' },
+                    marginBottom: { xs: '8px', sm: '16px' },
                   }}
                 >
                   個人資料 Personal Information
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 1, sm: 2 }}>
                   <Grid item xs={12} sm={6}>
                     <Field
                       name="contactPerson.nameCn"
@@ -557,14 +632,20 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   variant="h6" 
                   gutterBottom 
                   sx={{ 
-                    fontSize: '1.25rem',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
                     fontWeight: 700,
-                    color: '#000000'
+                    color: '#000000',
+                    position: 'sticky',
+                    top: { xs: '60px', sm: '80px' },
+                    zIndex: 1,
+                    backgroundColor: 'background.paper',
+                    padding: { xs: '8px 0', sm: '16px 0' },
+                    marginBottom: { xs: '8px', sm: '16px' },
                   }}
                 >
                   住址 Address
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 1, sm: 2 }}>
                   <Grid item xs={12}>
                     <Field
                       name="address.street"
@@ -610,14 +691,20 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   variant="h6" 
                   gutterBottom 
                   sx={{ 
-                    fontSize: '1.25rem',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
                     fontWeight: 700,
-                    color: '#000000'
+                    color: '#000000',
+                    position: 'sticky',
+                    top: { xs: '60px', sm: '80px' },
+                    zIndex: 1,
+                    backgroundColor: 'background.paper',
+                    padding: { xs: '8px 0', sm: '16px 0' },
+                    marginBottom: { xs: '8px', sm: '16px' },
                   }}
                 >
                   銀行轉帳資料 Bank Account for Fund Transfer
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 1, sm: 2 }}>
                   <Grid item xs={12} sm={6}>
                     <Field
                       as={TextField}
@@ -723,9 +810,15 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   variant="h6" 
                   gutterBottom 
                   sx={{ 
-                    fontSize: '1.25rem',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
                     fontWeight: 700,
-                    color: '#000000'
+                    color: '#000000',
+                    position: 'sticky',
+                    top: { xs: '60px', sm: '80px' },
+                    zIndex: 1,
+                    backgroundColor: 'background.paper',
+                    padding: { xs: '8px 0', sm: '16px 0' },
+                    marginBottom: { xs: '8px', sm: '16px' },
                   }}
                 >
                   專業認證/資格 Professional Certification / Qualification
@@ -734,7 +827,21 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   {({ push, remove }) => (
                     <div>
                       {values.professionalCertifications.map((_, index) => (
-                        <Box key={index} sx={{ mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                        <Box 
+                          key={index} 
+                          sx={{ 
+                            mb: { xs: 2, sm: 3 }, 
+                            p: { xs: 1, sm: 2 }, 
+                            border: '1px solid #e0e0e0', 
+                            borderRadius: 1,
+                            '@supports (padding: max(0px))': {
+                              padding: {
+                                xs: `max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right))`,
+                                sm: '16px',
+                              },
+                            },
+                          }}
+                        >
                           <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
                               <Field
@@ -844,13 +951,32 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
               </Grid>
 
               <Grid item xs={12}>
-                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+                <Box 
+                  sx={{ 
+                    mt: { xs: 2, sm: 4 }, 
+                    display: 'flex', 
+                    justifyContent: 'center',
+                    position: 'sticky',
+                    bottom: 0,
+                    zIndex: 1,
+                    backgroundColor: 'background.paper',
+                    padding: { xs: '16px 0', sm: '24px 0' },
+                    borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+                    '@supports (padding: max(0px))': {
+                      padding: {
+                        xs: `max(16px, env(safe-area-inset-bottom)) 0`,
+                        sm: '24px 0',
+                      },
+                    },
+                  }}
+                >
                   <Button
                     type="submit"
                     variant="contained"
                     color="primary"
                     size="large"
                     disabled={isSubmitting}
+                    fullWidth={isMobile}
                   >
                     {isSubmitting ? 'Submitting...' : submitButtonText}
                   </Button>
@@ -861,6 +987,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
               open={snackbar.open}
               autoHideDuration={6000}
               onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
               <Alert
                 onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
