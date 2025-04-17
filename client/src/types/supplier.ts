@@ -1,13 +1,16 @@
+export type SupplierType = 'RN' | 'EN' | 'PCW' | 'HCA';
+export type Gender = 'M' | 'F';
+
 export interface ContactPerson {
-  nameEn: string;
   nameCn: string;
+  nameEn: string;
   email: string;
   phone: string;
 }
 
 export interface Address {
   street: string;
-  addressLine2: string;
+  addressLine2?: string;
   district: string;
 }
 
@@ -16,7 +19,7 @@ export interface BankAccount {
   bankCode: string;
   accountNumber: string;
   cardHolderName: string;
-  fileUrl: string;
+  fileUrl?: string;
 }
 
 export interface Document {
@@ -27,13 +30,9 @@ export interface Document {
 
 export interface ProfessionalCertification {
   name: string;
-  fileUrl: string;
-  expiryDate: string; // Format: DD/MM/YYYY
-  uploadDate: Date;
+  expiryDate: string;
+  fileUrl?: string;
 }
-
-export type SupplierType = 'RN' | 'EN' | 'PCW' | 'HCA';
-export type Gender = 'M' | 'F';
 
 export interface DateOfBirth {
   day: string;
@@ -41,19 +40,26 @@ export interface DateOfBirth {
   year: string;
 }
 
-export interface Supplier {
+export interface SupplierFormData {
   _id?: string;
   supplierType: SupplierType;
   contactPerson: ContactPerson;
   gender: Gender;
-  address: Address;
+  dateOfBirth: {
+    day: string;
+    month: string;
+    year: string;
+  };
   hkid: string;
-  idCardFileUrl: string;
-  dateOfBirth: DateOfBirth;
-  documents: Document[];
-  professionalCertifications: ProfessionalCertification[];
+  idCardFile?: string;
+  address: Address;
   bankAccount: BankAccount;
+  professionalCertifications: ProfessionalCertification[];
   status: 'Pending' | 'Approved' | 'Rejected';
-  createdAt?: Date;
-  updatedAt?: Date;
+}
+
+export interface Supplier extends SupplierFormData {
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
 } 

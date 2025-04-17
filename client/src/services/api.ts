@@ -1,11 +1,14 @@
 import axios from 'axios';
-import { Supplier } from '../types/supplier';
+import { Supplier, SupplierFormData } from '../types/supplier';
 
 // Use the Cloudflare endpoint
-const API_URL = process.env.REACT_APP_API_URL || 'https://www.mixtech.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003';
 
 const api = axios.create({
   baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Add response interceptor for error handling
@@ -29,39 +32,41 @@ api.interceptors.response.use(
   }
 );
 
-export const supplierApi = {
-  createSupplier: async (formData: FormData) => {
-    try {
-      const response = await api.post('/suppliers', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error creating supplier:', error);
-      throw error;
-    }
-  },
+export const uploadFile = async (formData: FormData): Promise<{ url: string }> => {
+  const response = await api.post('/api/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
 
-  getSuppliers: async () => {
-    const response = await api.get<Supplier[]>('/suppliers');
-    return response.data;
-  },
+export const createSupplier = async (formData: FormData): Promise<Supplier> => {
+  const response = await api.post('/api/suppliers', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
 
-  getSupplierById: async (id: string) => {
-    const response = await api.get<Supplier>(`/suppliers/${id}`);
-    return response.data;
-  },
+export const getSuppliers = async (): Promise<Supplier[]> => {
+  const response = await api.get('/api/suppliers');
+  return response.data;
+};
 
-  updateSupplier: async (id: string, supplier: Partial<Supplier>) => {
-    const response = await api.put<Supplier>(`/suppliers/${id}`, supplier);
-    return response.data;
-  },
+export const getSupplier = async (id: string): Promise<Supplier> => {
+  const response = await api.get(`/api/suppliers/${id}`);
+  return response.data;
+};
 
-  deleteSupplier: async (id: string) => {
-    await api.delete(`/suppliers/${id}`);
-  },
+export const updateSupplier = async (id: string, data: Partial<SupplierFormData>): Promise<Supplier> => {
+  const response = await api.put(`/api/suppliers/${id}`, data);
+  return response.data;
+};
+
+export const deleteSupplier = async (id: string): Promise<void> => {
+  await api.delete(`/api/suppliers/${id}`);
 };
 
 export default api; 

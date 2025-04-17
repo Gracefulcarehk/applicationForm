@@ -1,34 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Button,
+  Container,
   Grid,
+  Paper,
   TextField,
   Typography,
   MenuItem,
-  Paper,
-  IconButton,
-  Snackbar,
   Alert,
+  Snackbar,
   useTheme,
   useMediaQuery,
-  FormControl,
-  InputLabel,
-  Select,
-  FormHelperText,
 } from '@mui/material';
-import { Formik, Form, Field, FieldArray, FormikErrors } from 'formik';
-import * as Yup from 'yup';
-import { Supplier, SupplierType, Gender, ProfessionalCertification } from '../types/supplier';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import { format, parse } from 'date-fns';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import { supplierApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { useFormik, FormikHelpers } from 'formik';
+import { Theme } from '@mui/material/styles';
+import { uploadFile, createSupplier } from '../services/api';
+import { SupplierFormData, ProfessionalCertification } from '../types/supplier';
+import { hongKongBanks, hongKongDistricts, supplierTypes, genderOptions } from '../data/formData';
 
 const validationSchema = Yup.object({
   supplierType: Yup.string().required('請選擇供應商類型 Please select supplier type'),
@@ -78,44 +73,12 @@ const validationSchema = Yup.object({
 });
 
 interface SupplierFormProps {
-  initialValues?: Omit<Supplier, '_id'>;
-  onSubmit?: (values: Omit<Supplier, '_id'>) => Promise<void>;
+  initialValues?: Omit<SupplierFormData, '_id'>;
+  onSubmit?: (values: Omit<SupplierFormData, '_id'>) => Promise<void>;
   submitButtonText?: string;
 }
 
-const hongKongBanks = [
-  { name: 'HSBC (Hongkong and Shanghai Banking Corporation)', nameCn: '滙豐銀行', code: '004' },
-  { name: 'Bank of China (Hong Kong)', nameCn: '中國銀行(香港)', code: '012' },
-  { name: 'Standard Chartered Bank (Hong Kong)', nameCn: '渣打銀行(香港)', code: '003' },
-  { name: 'Hang Seng Bank', nameCn: '恒生銀行', code: '024' },
-  { name: 'Bank of East Asia', nameCn: '東亞銀行', code: '015' },
-  { name: 'DBS Bank (Hong Kong)', nameCn: '星展銀行(香港)', code: '016' },
-  { name: 'Citibank (Hong Kong)', nameCn: '花旗銀行(香港)', code: '006' },
-  { name: 'China Construction Bank (Asia)', nameCn: '中國建設銀行(亞洲)', code: '009' },
-  { name: 'Industrial and Commercial Bank of China (Asia)', nameCn: '中國工商銀行(亞洲)', code: '072' },
-  { name: 'Agricultural Bank of China (Hong Kong)', nameCn: '中國農業銀行(香港)', code: '010' },
-  { name: 'Bank of Communications (Hong Kong)', nameCn: '交通銀行(香港)', code: '027' },
-  { name: 'China Merchants Bank (Hong Kong)', nameCn: '招商銀行(香港)', code: '238' },
-  { name: 'Nanyang Commercial Bank', nameCn: '南洋商業銀行', code: '025' },
-  { name: 'Wing Lung Bank', nameCn: '永隆銀行', code: '020' },
-  { name: 'Chiyu Banking Corporation', nameCn: '集友銀行', code: '039' },
-  { name: 'Public Bank (Hong Kong)', nameCn: '大眾銀行(香港)', code: '026' },
-  { name: 'Chong Hing Bank', nameCn: '創興銀行', code: '041' },
-  { name: 'Shanghai Commercial Bank', nameCn: '上海商業銀行', code: '025' },
-  { name: 'Tai Sang Bank', nameCn: '大生銀行', code: '052' },
-  { name: 'Tai Yau Bank', nameCn: '大有銀行', code: '053' },
-  { name: 'Wing Hang Bank', nameCn: '永亨銀行', code: '035' },
-  { name: 'CITIC Bank International', nameCn: '中信銀行國際', code: '018' },
-  { name: 'China CITIC Bank International', nameCn: '中信銀行國際', code: '018' },
-  { name: 'China Minsheng Banking Corporation (Hong Kong)', nameCn: '中國民生銀行(香港)', code: '353' },
-  { name: 'China Zheshang Bank (Hong Kong)', nameCn: '浙商銀行(香港)', code: '365' },
-  { name: 'China Guangfa Bank (Hong Kong)', nameCn: '廣發銀行(香港)', code: '358' },
-  { name: 'China Everbright Bank (Hong Kong)', nameCn: '中國光大銀行(香港)', code: '359' },
-  { name: 'China Bohai Bank (Hong Kong)', nameCn: '渤海銀行(香港)', code: '361' },
-  { name: 'China Huishang Bank (Hong Kong)', nameCn: '徽商銀行(香港)', code: '362' },
-];
-
-const defaultValues: Omit<Supplier, '_id'> = {
+const defaultValues: Omit<SupplierFormData, '_id'> = {
   supplierType: 'RN',
   contactPerson: {
     nameEn: '',
@@ -153,30 +116,6 @@ const defaultValues: Omit<Supplier, '_id'> = {
   status: 'Pending',
 };
 
-const supplierTypes: SupplierType[] = ['RN', 'EN', 'PCW', 'HCA'];
-const genderOptions: Gender[] = ['M', 'F'];
-
-const hongKongDistricts = [
-  { name: 'Central and Western', nameCn: '中西區' },
-  { name: 'Eastern', nameCn: '東區' },
-  { name: 'Southern', nameCn: '南區' },
-  { name: 'Wan Chai', nameCn: '灣仔區' },
-  { name: 'Sham Shui Po', nameCn: '深水埗區' },
-  { name: 'Kowloon City', nameCn: '九龍城區' },
-  { name: 'Wong Tai Sin', nameCn: '黃大仙區' },
-  { name: 'Kwun Tong', nameCn: '觀塘區' },
-  { name: 'Yau Tsim Mong', nameCn: '油尖旺區' },
-  { name: 'Islands', nameCn: '離島區' },
-  { name: 'Kwai Tsing', nameCn: '葵青區' },
-  { name: 'North', nameCn: '北區' },
-  { name: 'Sai Kung', nameCn: '西貢區' },
-  { name: 'Sha Tin', nameCn: '沙田區' },
-  { name: 'Tai Po', nameCn: '大埔區' },
-  { name: 'Tsuen Wan', nameCn: '荃灣區' },
-  { name: 'Tuen Mun', nameCn: '屯門區' },
-  { name: 'Yuen Long', nameCn: '元朗區' }
-];
-
 const SupplierForm: React.FC<SupplierFormProps> = ({
   initialValues = defaultValues,
   onSubmit,
@@ -184,32 +123,14 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [viewportHeight, setViewportHeight] = useState<number>(0);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<{
-    idCard: File | null;
-    bank: File | null;
-    certifications: File[];
-  }>({
-    idCard: null,
-    bank: null,
-    certifications: [],
-  });
-  const [fileErrors, setFileErrors] = useState<{ [key: number]: string }>({});
+  const navigate = useNavigate();
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [selectedBankFile, setSelectedBankFile] = useState<File | null>(null);
   const [bankFileError, setBankFileError] = useState<string>('');
-  const [selectedIdCardFile, setSelectedIdCardFile] = useState<File | null>(null);
-  const [idCardFileError, setIdCardFileError] = useState<string>('');
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
-  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
 
   // Track viewport height changes
   useEffect(() => {
@@ -232,134 +153,48 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    type: 'idCard' | 'bank' | 'certification'
-  ) => {
-    const file = event.target.files?.[0];
+  const handleIdCardFileChange = async (e: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      alert('Invalid file type. Only images and PDFs are allowed.');
+      setSnackbar({
+        open: true,
+        message: '只接受 JPG、PNG 或 PDF 檔案 Only JPG, PNG or PDF files are accepted',
+        severity: 'error'
+      });
       return;
     }
 
-    // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('File size exceeds 10MB limit.');
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      setSnackbar({
+        open: true,
+        message: '檔案大小不能超過 5MB File size cannot exceed 5MB',
+        severity: 'error'
+      });
       return;
     }
 
-    if (type === 'certification') {
-      setSelectedFiles(prev => ({
-        ...prev,
-        certifications: [...prev.certifications, file],
-      }));
-    } else {
-      setSelectedFiles(prev => ({
-        ...prev,
-        [type]: file,
-      }));
-    }
-  };
-
-  const handleRemoveFile = (type: 'idCard' | 'bank' | 'certification', index?: number) => {
-    if (type === 'certification' && index !== undefined) {
-      setSelectedFiles(prev => ({
-        ...prev,
-        certifications: prev.certifications.filter((_, i) => i !== index),
-      }));
-    } else {
-      setSelectedFiles(prev => ({
-        ...prev,
-        [type]: null,
-      }));
-    }
-  };
-
-  const handleBankFileChange = (event: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Check file type
-      const fileType = file.type;
-      const isImage = fileType.startsWith('image/');
-      const isPDF = fileType === 'application/pdf';
-      
-      if (!isImage && !isPDF) {
-        setBankFileError('只接受圖片和PDF文件 Only image and PDF files are allowed');
-        setSelectedBankFile(null);
-        setFieldValue('bankAccount.fileUrl', '');
-        return;
-      }
-
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setBankFileError('文件大小不能超過5MB File size should be less than 5MB');
-        setSelectedBankFile(null);
-        setFieldValue('bankAccount.fileUrl', '');
-        return;
-      }
-
-      setBankFileError('');
-      setSelectedBankFile(file);
-      setFieldValue('bankAccount.fileUrl', file);
-    }
-  };
-
-  const handleRemoveBankFile = (setFieldValue: (field: string, value: any) => void) => {
-    setSelectedBankFile(null);
-    setBankFileError('');
-    setFieldValue('bankAccount.fileUrl', '');
-  };
-
-  const handleIdCardFileChange = (event: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Check file type
-      const fileType = file.type;
-      const isImage = fileType.startsWith('image/');
-      const isPDF = fileType === 'application/pdf';
-      
-      if (!isImage && !isPDF) {
-        setIdCardFileError('只接受圖片和PDF文件 Only image and PDF files are allowed');
-        setSelectedIdCardFile(null);
-        setFieldValue('idCardFileUrl', '');
-        return;
-      }
-
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setIdCardFileError('文件大小不能超過5MB File size should be less than 5MB');
-        setSelectedIdCardFile(null);
-        setFieldValue('idCardFileUrl', '');
-        return;
-      }
-
-      setIdCardFileError('');
-      setSelectedIdCardFile(file);
-      setFieldValue('idCardFileUrl', file);
-    }
-  };
-
-  const handleRemoveIdCardFile = (setFieldValue: (field: string, value: any) => void) => {
-    setSelectedIdCardFile(null);
-    setIdCardFileError('');
-    setFieldValue('idCardFileUrl', '');
-  };
-
-  const handleBankChange = (event: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
-    const selectedBank = hongKongBanks.find(bank => bank.name === event.target.value);
-    if (selectedBank) {
-      setFieldValue('bankAccount.bank', selectedBank.name);
-      setFieldValue('bankAccount.bankCode', selectedBank.code);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await uploadFile(formData);
+      setFieldValue('idCardFile', response.url);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: '上傳檔案時發生錯誤 Error uploading file',
+        severity: 'error'
+      });
     }
   };
 
   const handleSubmit = async (
-    values: Omit<Supplier, '_id'>,
-    { setSubmitting }: FormikHelpers<Omit<Supplier, '_id'>>
+    values: Omit<SupplierFormData, '_id'>,
+    { setSubmitting }: FormikHelpers<Omit<SupplierFormData, '_id'>>
   ): Promise<void> => {
     try {
       const formData = new FormData();
@@ -374,17 +209,11 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       });
 
       // Append files
-      if (selectedFiles.idCard) {
-        formData.append('idCardFile', selectedFiles.idCard);
+      if (selectedBankFile) {
+        formData.append('bankFile', selectedBankFile);
       }
-      if (selectedFiles.bank) {
-        formData.append('bankFile', selectedFiles.bank);
-      }
-      selectedFiles.certifications.forEach((file) => {
-        formData.append('certificationFiles', file);
-      });
 
-      const response = await supplierApi.createSupplier(formData);
+      const response = await createSupplier(formData);
 
       // Show success message
       setSnackbar({
@@ -410,7 +239,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     }
   };
 
-  const formik = useFormik<Omit<Supplier, '_id'>>({
+  const formik = useFormik<Omit<SupplierFormData, '_id'>>({
     initialValues,
     validationSchema,
     onSubmit: handleSubmit,
@@ -641,7 +470,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   component="span"
                   fullWidth
                   sx={{ 
-                    borderColor: idCardFileError ? 'error.main' : '#5D6D9B',
+                    borderColor: snackbar.severity === 'error' ? 'error.main' : '#5D6D9B',
                     color: '#5D6D9B',
                     '&:hover': {
                       borderColor: '#5D6D9B',
@@ -652,25 +481,12 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   上傳香港身份證 Upload HKID Card
                 </Button>
               </label>
-              {selectedFiles.idCard && (
+              {formik.values.idCardFile && (
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                   <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                    Selected file: {selectedFiles.idCard.name}
+                    Selected file: {formik.values.idCardFile.split('/').pop()}
                   </Typography>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => handleRemoveFile('idCard')}
-                    sx={{ ml: 1 }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
                 </Box>
-              )}
-              {idCardFileError && (
-                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                  {idCardFileError}
-                </Typography>
               )}
             </Box>
           </Grid>
@@ -762,7 +578,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   name="bankAccount.bank"
                   error={formik.touched.bankAccount?.bank && !!formik.errors.bankAccount?.bank}
                   helperText={formik.touched.bankAccount?.bank && formik.errors.bankAccount?.bank}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBankChange(e, formik.setFieldValue)}
                 >
                   {hongKongBanks.map((bank) => (
                     <MenuItem key={bank.code} value={bank.name}>
@@ -833,20 +648,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                       <Typography variant="body2" sx={{ flexGrow: 1 }}>
                         Selected file: {selectedBankFile.name}
                       </Typography>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleRemoveBankFile(formik.setFieldValue)}
-                        sx={{ ml: 1 }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
                     </Box>
-                  )}
-                  {bankFileError && (
-                    <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                      {bankFileError}
-                    </Typography>
                   )}
                 </Box>
               </Grid>
@@ -932,14 +734,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                                 <Typography variant="body2" sx={{ flexGrow: 1 }}>
                                   Selected file: {file.name}
                                 </Typography>
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleRemoveFile('certification', i)}
-                                  sx={{ ml: 1 }}
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
                               </Box>
                             ))}
                           </Box>
