@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  Container,
   Grid,
   Paper,
   TextField,
@@ -12,12 +11,6 @@ import {
   Snackbar,
   useTheme,
   useMediaQuery,
-  FormControl,
-  InputLabel,
-  Select,
-  FormHelperText,
-  IconButton,
-  InputAdornment,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -25,10 +18,10 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useFormik, FormikHelpers, Field, FieldArray, FormikErrors } from 'formik';
 import * as Yup from 'yup';
 import { format, parse } from 'date-fns';
-import { createSupplier, uploadFile } from '../services/api';
+import { createSupplier } from '../services/api';
 import { SupplierFormData, ProfessionalCertification } from '../types/supplier';
 import { hongKongBanks, hongKongDistricts, supplierTypes, genderOptions } from '../data/formData';
-import { Visibility, VisibilityOff, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 
 const validationSchema = Yup.object({
   supplierType: Yup.string().required('請選擇供應商類型 Please select supplier type'),
@@ -126,21 +119,16 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   onSubmit,
   submitButtonText = '提交申請 Submit Application',
 }) => {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedBankFile, setSelectedBankFile] = useState<File | null>(null);
+  const [selectedIdCardFile, setSelectedIdCardFile] = useState<File | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string>('');
-  const [selectedIdCardFile, setSelectedIdCardFile] = useState<File | null>(null);
-  const [idCardFileError, setIdCardFileError] = useState<string>('');
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
   useEffect(() => {
@@ -158,17 +146,17 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      setFileError('只接受 JPEG、PNG 或 PDF 檔案 Only JPEG, PNG or PDF files are accepted');
+      setSubmitError(`只接受 JPEG、PNG 或 PDF 檔案 Only JPEG, PNG or PDF files are accepted`);
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setFileError('檔案大小必須小於 5MB File size must be less than 5MB');
+      setSubmitError('檔案大小必須小於 5MB File size must be less than 5MB');
       return;
     }
 
-    setSelectedFile(file);
-    setFileError('');
+    setSelectedFiles([file]);
+    setSubmitError('');
   };
 
   const handleIdCardFileChange = async (e: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
@@ -177,17 +165,17 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      setIdCardFileError('只接受 JPEG、PNG 或 PDF 檔案 Only JPEG, PNG or PDF files are accepted');
+      setSubmitError('只接受 JPEG、PNG 或 PDF 檔案 Only JPEG, PNG or PDF files are accepted');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setIdCardFileError('檔案大小必須小於 5MB File size must be less than 5MB');
+      setSubmitError('檔案大小必須小於 5MB File size must be less than 5MB');
       return;
     }
 
     setSelectedIdCardFile(file);
-    setIdCardFileError('');
+    setSubmitError('');
     setFieldValue('idCardFile', file);
   };
 
@@ -209,8 +197,8 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
         }
       });
 
-      if (selectedFile) {
-        formData.append('bankFile', selectedFile);
+      if (selectedFiles.length > 0) {
+        formData.append('bankFile', selectedFiles[0]);
       }
       if (selectedIdCardFile) {
         formData.append('idCardFile', selectedIdCardFile);
@@ -222,18 +210,11 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
         await createSupplier(formData);
       }
 
-      setSnackbar({
-        open: true,
-        message: '申請已成功提交 Application submitted successfully',
-        severity: 'success',
-      });
+      setSubmitSuccess(true);
+      setSubmitError(null);
     } catch (error) {
       console.error('Error submitting form:', error);
-      setSnackbar({
-        open: true,
-        message: '提交申請時發生錯誤 Error submitting application',
-        severity: 'error',
-      });
+      setSubmitError('提交申請時發生錯誤 Error submitting application');
     } finally {
       setSubmitting(false);
     }
@@ -480,7 +461,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                     component="span"
                     fullWidth
                     sx={{ 
-                      borderColor: snackbar.severity === 'error' ? 'error.main' : '#5D6D9B',
+                      borderColor: submitError ? 'error.main' : '#5D6D9B',
                       color: '#5D6D9B',
                       '&:hover': {
                         borderColor: '#5D6D9B',
@@ -642,7 +623,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                         component="span"
                         fullWidth
                         sx={{ 
-                          borderColor: fileError ? 'error.main' : '#5D6D9B',
+                          borderColor: submitError ? 'error.main' : '#5D6D9B',
                           color: '#5D6D9B',
                           '&:hover': {
                             borderColor: '#5D6D9B',
@@ -653,10 +634,10 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                         上傳銀行卡副本 Upload Bank Card Copy
                       </Button>
                     </label>
-                    {selectedFile && (
+                    {selectedBankFile && (
                       <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                         <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                          Selected file: {selectedFile.name}
+                          Selected file: {selectedBankFile.name}
                         </Typography>
                       </Box>
                     )}
@@ -715,7 +696,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                                 component="span"
                                 fullWidth
                                 sx={{ 
-                                  borderColor: fileError ? 'error.main' : '#5D6D9B',
+                                  borderColor: submitError ? 'error.main' : '#5D6D9B',
                                   color: '#5D6D9B',
                                   '&:hover': {
                                     borderColor: '#5D6D9B',
@@ -725,9 +706,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                                 上傳證書 Upload Certificate
                               </Button>
                             </label>
-                            {fileError && (
+                            {submitError && (
                               <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                                {fileError}
+                                {submitError}
                               </Typography>
                             )}
                           </Grid>
@@ -772,28 +753,46 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   variant="contained"
                   color="primary"
                   size="large"
-                  disabled={formik.isSubmitting}
+                  disabled={isSubmitting}
                   fullWidth={isMobile}
                 >
-                  {formik.isSubmitting ? 'Submitting...' : submitButtonText}
+                  {isSubmitting ? 'Submitting...' : submitButtonText}
                 </Button>
               </Box>
             </Grid>
           </Grid>
-          <Snackbar
-            open={snackbar.open}
-            autoHideDuration={6000}
-            onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-          >
-            <Alert
-              onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-              severity={snackbar.severity}
-              sx={{ width: '100%' }}
+          {submitSuccess && (
+            <Snackbar
+              open={true}
+              autoHideDuration={6000}
+              onClose={() => {}}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-              {snackbar.message}
-            </Alert>
-          </Snackbar>
+              <Alert
+                onClose={() => {}}
+                severity="success"
+                sx={{ width: '100%' }}
+              >
+                申請已成功提交 Application submitted successfully
+              </Alert>
+            </Snackbar>
+          )}
+          {submitError && (
+            <Snackbar
+              open={true}
+              autoHideDuration={6000}
+              onClose={() => {}}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+              <Alert
+                onClose={() => {}}
+                severity="error"
+                sx={{ width: '100%' }}
+              >
+                {submitError}
+              </Alert>
+            </Snackbar>
+          )}
         </form>
       </Paper>
     </Box>
