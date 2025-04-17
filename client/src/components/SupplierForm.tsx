@@ -184,8 +184,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   
   // Consistent breakpoint detection
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   
   // Add viewport height detection for mobile browsers
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
