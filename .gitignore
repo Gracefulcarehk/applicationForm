@@ -47,4 +47,7 @@ yarn-error.log*
 .rts2_cache_umd/
 
 # TypeScript
-*.tsbuildinfo 
+*.tsbuildinfo
+
+# Screenshots
+client/screenshots/ 
