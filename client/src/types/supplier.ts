@@ -30,7 +30,10 @@ export interface Document {
 
 export interface ProfessionalCertification {
   name: string;
+  issuingOrganization: string;
+  issueDate: string;
   expiryDate: string;
+  uploadDate?: string;
   fileUrl?: string;
 }
 

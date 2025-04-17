@@ -12,18 +12,25 @@ import {
   Snackbar,
   useTheme,
   useMediaQuery,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText,
+  IconButton,
+  InputAdornment,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { useFormik } from 'formik';
+import { useFormik, FormikHelpers, Field, FieldArray, FormikErrors } from 'formik';
 import * as Yup from 'yup';
 import { format, parse } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Theme } from '@mui/material/styles';
-import { uploadFile, createSupplier } from '../services/api';
+import { createSupplier, uploadFile } from '../services/api';
 import { SupplierFormData, ProfessionalCertification } from '../types/supplier';
 import { hongKongBanks, hongKongDistricts, supplierTypes, genderOptions } from '../data/formData';
+import { Visibility, VisibilityOff, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 
 const validationSchema = Yup.object({
   supplierType: Yup.string().required('請選擇供應商類型 Please select supplier type'),
@@ -131,6 +138,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   const [isScrolled, setIsScrolled] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const [fileErrors, setFileErrors] = useState<Record<string, string | undefined>>({});
 
   // Track viewport height changes
   useEffect(() => {
@@ -192,6 +200,38 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     }
   };
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, field: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      setFileErrors((prev) => ({ ...prev, [field]: 'Only JPEG, PNG, and PDF files are allowed' }));
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      setFileErrors((prev) => ({ ...prev, [field]: 'File size must be less than 5MB' }));
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await uploadFile(formData);
+      formik.setFieldValue(field, response.url);
+      setFileErrors((prev) => ({ ...prev, [field]: undefined }));
+    } catch (error) {
+      setFileErrors((prev) => ({ ...prev, [field]: 'Failed to upload file' }));
+    }
+  };
+
+  const handleBankFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    await handleFileChange(event, 'bankStatementUrl');
+  };
+
   const handleSubmit = async (
     values: Omit<SupplierFormData, '_id'>,
     { setSubmitting }: FormikHelpers<Omit<SupplierFormData, '_id'>>
@@ -244,6 +284,14 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     validationSchema,
     onSubmit: handleSubmit,
   });
+
+  const handleDateChange = (date: Date | null, field: string) => {
+    if (date) {
+      formik.setFieldValue(field, format(date, 'yyyy-MM-dd'));
+    } else {
+      formik.setFieldValue(field, '');
+    }
+  };
 
   return (
     <Paper 
@@ -624,7 +672,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                     style={{ display: 'none' }}
                     id="bank-account-file"
                     type="file"
-                    onChange={(e) => handleBankFileChange(e, formik.setFieldValue)}
+                    onChange={(e) => handleBankFileChange(e)}
                   />
                   <label htmlFor="bank-account-file">
                     <Button
@@ -710,7 +758,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                               style={{ display: 'none' }}
                               id={`certification-file-${index}`}
                               type="file"
-                              onChange={(e) => handleFileChange(e, 'certification')}
+                              onChange={(e) => handleFileChange(e, `professionalCertifications.${index}.fileUrl`)}
                             />
                             <label htmlFor={`certification-file-${index}`}>
                               <Button
@@ -718,7 +766,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                                 component="span"
                                 fullWidth
                                 sx={{ 
-                                  borderColor: fileErrors[index] ? 'error.main' : '#5D6D9B',
+                                  borderColor: fileErrors[`professionalCertifications.${index}.fileUrl`] ? 'error.main' : '#5D6D9B',
                                   color: '#5D6D9B',
                                   '&:hover': {
                                     borderColor: '#5D6D9B',
@@ -729,13 +777,13 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                                 上傳專業認證/資格 Upload Professional Certification / Qualification
                               </Button>
                             </label>
-                            {selectedFiles.certifications.map((file, i) => (
-                              <Box key={i} sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                            {formik.values.professionalCertifications[index].fileUrl && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                                 <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                                  Selected file: {file.name}
+                                  Selected file: {formik.values.professionalCertifications[index].fileUrl.split('/').pop()}
                                 </Typography>
                               </Box>
-                            ))}
+                            )}
                           </Box>
                         </Grid>
                         <Grid item xs={12} sm={6}>
