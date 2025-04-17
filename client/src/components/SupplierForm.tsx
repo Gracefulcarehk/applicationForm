@@ -40,7 +40,7 @@ const validationSchema = Yup.object({
     district: Yup.string().required('請選擇地區 Please select district'),
   }),
   hkid: Yup.string().required('請輸入香港身份證號碼 Please enter HKID number'),
-  idCardFileUrl: Yup.string().required('請上傳身份證文件 Please upload ID card document'),
+  idCardFileUrl: Yup.mixed().required('請上傳身份證文件 Please upload ID card document'),
   dateOfBirth: Yup.object({
     day: Yup.string()
       .matches(/^[1-9]|[12][0-9]|3[01]$/, '日期必須在1至31之間 Day must be between 1 and 31')
@@ -55,7 +55,7 @@ const validationSchema = Yup.object({
   professionalCertifications: Yup.array().of(
     Yup.object({
       name: Yup.string().required('請輸入認證名稱 Please enter certification name'),
-      fileUrl: Yup.string().required('請上傳專業認證文件 Please upload professional certification document'),
+      fileUrl: Yup.mixed().required('請上傳專業認證文件 Please upload professional certification document'),
       expiryDate: Yup.string().required('請輸入認證到期日 Please enter certification expiry date'),
     })
   ).min(1, '請至少上傳一個專業認證 Please upload at least one professional certification'),
@@ -68,7 +68,7 @@ const validationSchema = Yup.object({
     cardHolderName: Yup.string()
       .required('請輸入持卡人姓名 Please enter card holder name')
       .matches(/^[a-zA-Z\s]+$/, '持卡人姓名必須為英文 Card holder name must be in English'),
-    fileUrl: Yup.string().required('請上傳銀行帳戶文件 Please upload bank account document'),
+    fileUrl: Yup.mixed().required('請上傳銀行帳戶文件 Please upload bank account document'),
   }).required('請填寫銀行帳戶資料 Please fill in bank account information'),
 });
 
@@ -244,7 +244,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
       setFileErrors(prev => ({ ...prev, [index]: '' }));
       setSelectedFiles(prev => ({ ...prev, [index]: file }));
-      setFieldValue(`professionalCertifications.${index}.fileUrl`, URL.createObjectURL(file));
+      setFieldValue(`professionalCertifications.${index}.fileUrl`, file);
     }
   };
 
@@ -279,7 +279,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
       setBankFileError('');
       setSelectedBankFile(file);
-      setFieldValue('bankAccount.fileUrl', URL.createObjectURL(file));
+      setFieldValue('bankAccount.fileUrl', file);
     }
   };
 
@@ -314,7 +314,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
       setIdCardFileError('');
       setSelectedIdCardFile(file);
-      setFieldValue('idCardFileUrl', URL.createObjectURL(file));
+      setFieldValue('idCardFileUrl', file);
     }
   };
 
