@@ -4,6 +4,7 @@ import { AppBar, Toolbar, Typography, Button, Container, CssBaseline, ThemeProvi
 import MenuIcon from '@mui/icons-material/Menu';
 import SupplierApplication from './pages/SupplierApplication';
 import ThankYouPage from './pages/ThankYouPage';
+import HomePage from './pages/HomePage';
 
 const theme = createTheme({
   palette: {
@@ -171,124 +172,7 @@ function App() {
         </Box>
         <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4 } }}>
           <Routes>
-            <Route path="/" element={
-              <div style={{ textAlign: 'center' }}>
-                <Box sx={{ 
-                  px: { xs: 2, sm: 4 },
-                  py: { xs: 2, sm: 4 },
-                  mt: { xs: 2, sm: 4 }
-                }}>
-                  <Typography 
-                    variant={isMobile ? "h5" : "h4"} 
-                    sx={{ 
-                      color: '#5D6D9B',
-                      fontWeight: 700,
-                      mb: 2,
-                      textAlign: 'left'
-                    }}
-                  >
-                    護理人員招聘
-                  </Typography>
-                  <Typography 
-                    variant={isMobile ? "body1" : "h6"} 
-                    sx={{ 
-                      color: '#5D6D9B',
-                      lineHeight: 1.8,
-                      textAlign: 'left'
-                    }}
-                  >
-                    滿心關愛，專業護理。加入滿心醫療，為長者及有需要人士獻上溫暖照顧。
-                  </Typography>
-                  <Typography 
-                    variant={isMobile ? "body1" : "h6"} 
-                    sx={{ 
-                      color: '#5D6D9B',
-                      lineHeight: 1.8,
-                      textAlign: 'left',
-                      mt: 1
-                    }}
-                  >
-                    您的愛心與專業，讓生命綻放光彩。成為我們的一員，共創有意義的護理事業！
-                  </Typography>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: { xs: 'center', md: 'flex-start' }, 
-                    mt: 3 
-                  }}>
-                    <Button
-                      variant="contained"
-                      component={Link}
-                      to="/apply"
-                      size={isMobile ? "medium" : "large"}
-                      sx={{
-                        backgroundColor: '#F5883B',
-                        color: '#FFFFFF',
-                        '&:hover': {
-                          backgroundColor: '#e67a2e',
-                        },
-                        fontSize: isMobile ? '1rem' : '1.1rem',
-                        padding: isMobile ? '8px 16px' : '12px 24px',
-                        borderRadius: '8px',
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      立即申請 Apply Now
-                    </Button>
-                  </Box>
-                </Box>
-
-                <Box 
-                  sx={{ 
-                    width: '100%',
-                    my: { xs: 2, sm: 4 },
-                    display: 'flex',
-                    flexDirection: 'row',
-                    flexWrap: 'nowrap',
-                    minHeight: { xs: '300px', sm: '600px' }
-                  }}
-                >
-                  <img
-                    src={process.env.PUBLIC_URL + "/HomePage_Banner_Desktop.png"}
-                    alt="GracefulCare Banner"
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      maxHeight: isMobile ? '300px' : '600px',
-                      objectFit: 'cover'
-                    }}
-                  />
-                </Box>
-
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  mt: { xs: 4, sm: 8 },
-                  mb: { xs: 4, sm: 8 }
-                }}>
-                  <Button
-                    component={Link}
-                    to="/apply"
-                    variant="contained"
-                    size={isMobile ? "medium" : "large"}
-                    sx={{
-                      backgroundColor: '#F5883B',
-                      color: '#FFFFFF',
-                      '&:hover': {
-                        backgroundColor: '#e67a2e',
-                      },
-                      fontSize: isMobile ? '1rem' : '1.1rem',
-                      padding: isMobile ? '8px 16px' : '12px 24px',
-                      borderRadius: '8px',
-                      textTransform: 'none',
-                      fontWeight: 600,
-                    }}
-                  >
-                    立即申請 Apply Now
-                  </Button>
-                </Box>
-              </div>
-            } />
+            <Route path="/" element={<HomePage />} />
             <Route path="/apply" element={<SupplierApplication />} />
             <Route path="/thank-you" element={<ThankYouPage />} />
           </Routes>
