@@ -120,7 +120,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   submitButtonText = '提交申請 Submit Application',
 }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [selectedBankFile, setSelectedBankFile] = useState<File | null>(null);
   const [selectedIdCardFile, setSelectedIdCardFile] = useState<File | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -155,45 +154,22 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       return;
     }
 
-    setSelectedFiles([file]);
-    setSubmitError('');
-  };
-
-  const handleIdCardFileChange = async (e: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) {
-      setSubmitError('只接受 JPEG、PNG 或 PDF 檔案 Only JPEG, PNG or PDF files are accepted');
-      return;
+    if (field === 'idCardFile') {
+      setSelectedIdCardFile(file);
+      formik.setFieldValue('idCardFile', file);
+    } else {
+      setSelectedFiles([file]);
+      formik.setFieldValue(field, file);
     }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setSubmitError('檔案大小必須小於 5MB File size must be less than 5MB');
-      return;
-    }
-
-    setSelectedIdCardFile(file);
-    setSubmitError('');
-    setFieldValue('idCardFile', file);
+    setSubmitError(null);
   };
 
-  const handleBankFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    await handleFileChange(event, 'bankStatementUrl');
-  };
-
-  const handleSubmit = async (
-    values: Omit<SupplierFormData, '_id'>,
-    { setSubmitting }: FormikHelpers<Omit<SupplierFormData, '_id'>>
-  ): Promise<void> => {
+  const handleSubmit = async (values: SupplierFormData, { setSubmitting }: FormikHelpers<SupplierFormData>) => {
     try {
-      setSubmitting(true);
       const formData = new FormData();
-
       Object.entries(values).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
-          formData.append(key, value.toString());
+          formData.append(key, value);
         }
       });
 
@@ -453,7 +429,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   style={{ display: 'none' }}
                   id="id-card-file"
                   type="file"
-                  onChange={(e) => handleIdCardFileChange(e, formik.setFieldValue)}
+                  onChange={(e) => handleFileChange(e, 'idCardFile')}
                 />
                 <label htmlFor="id-card-file">
                   <Button
@@ -615,7 +591,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                       style={{ display: 'none' }}
                       id="bank-account-file"
                       type="file"
-                      onChange={(e) => handleBankFileChange(e)}
+                      onChange={(e) => handleFileChange(e, 'bankAccount.fileUrl')}
                     />
                     <label htmlFor="bank-account-file">
                       <Button
@@ -634,10 +610,10 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                         上傳銀行卡副本 Upload Bank Card Copy
                       </Button>
                     </label>
-                    {selectedBankFile && (
+                    {selectedFiles.length > 0 && (
                       <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                         <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                          Selected file: {selectedBankFile.name}
+                          Selected file: {selectedFiles[0].name}
                         </Typography>
                       </Box>
                     )}
