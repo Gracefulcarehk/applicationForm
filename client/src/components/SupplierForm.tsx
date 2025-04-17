@@ -47,7 +47,7 @@ const validationSchema = Yup.object({
     district: Yup.string().required('請選擇地區 Please select district'),
   }),
   hkid: Yup.string().required('請輸入香港身份證號碼 Please enter HKID number'),
-  idCardFileUrl: Yup.mixed().required('請上傳身份證文件 Please upload ID card document'),
+  idCardFile: Yup.mixed().required('請上傳身份證文件 Please upload ID card document'),
   dateOfBirth: Yup.object({
     day: Yup.string()
       .matches(/^[1-9]|[12][0-9]|3[01]$/, '日期必須在1至31之間 Day must be between 1 and 31')
@@ -85,34 +85,26 @@ interface SupplierFormProps {
   submitButtonText?: string;
 }
 
-const defaultValues: Omit<SupplierFormData, '_id'> = {
+const defaultFormValues: SupplierFormData = {
   supplierType: 'RN',
   contactPerson: {
-    nameEn: '',
     nameCn: '',
+    nameEn: '',
     email: '',
     phone: '',
   },
   gender: 'M',
-  address: {
-    street: '',
-    addressLine2: '',
-    district: '',
-  },
-  hkid: '',
-  idCardFileUrl: '',
   dateOfBirth: {
     day: '',
     month: '',
     year: '',
   },
-  documents: [],
-  professionalCertifications: [{
-    name: '',
-    fileUrl: '',
-    expiryDate: '',
-    uploadDate: new Date(),
-  }],
+  hkid: '',
+  idCardFile: '',
+  address: {
+    street: '',
+    district: '',
+  },
   bankAccount: {
     bank: '',
     bankCode: '',
@@ -120,11 +112,19 @@ const defaultValues: Omit<SupplierFormData, '_id'> = {
     cardHolderName: '',
     fileUrl: '',
   },
+  professionalCertifications: [{
+    name: '',
+    issuingOrganization: '',
+    issueDate: '',
+    expiryDate: '',
+    uploadDate: format(new Date(), 'yyyy-MM-dd'),
+    fileUrl: '',
+  }],
   status: 'Pending',
 };
 
 const SupplierForm: React.FC<SupplierFormProps> = ({
-  initialValues = defaultValues,
+  initialValues = defaultFormValues,
   onSubmit,
   submitButtonText = '提交申請 Submit Application',
 }) => {
