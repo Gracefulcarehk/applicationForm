@@ -1,0 +1,9 @@
+[
+  {
+    "AllowedOrigins": ["http://localhost:3000", "https://wemixtech.com", "https://www.wemixtech.com"],
+    "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+] 

@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IProfessionalCertification {
   name: string;
+  fileKey: string;
   fileUrl: string;
   expiryDate: string;
   uploadDate: Date;
@@ -12,6 +13,7 @@ export interface IBankAccount {
   bankCode: string;
   accountNumber: string;
   cardHolderName: string;
+  fileKey: string;
   fileUrl: string;
 }
 
@@ -40,6 +42,7 @@ export interface ISupplier extends Document {
   gender: string;
   address: IAddress;
   hkid: string;
+  idCardFileKey: string;
   idCardFileUrl: string;
   dateOfBirth: IDateOfBirth;
   documents: string[];
@@ -95,6 +98,10 @@ const supplierSchema = new Schema<ISupplier>(
       required: [true, '請輸入香港身份證號碼 Please enter HKID number'],
       unique: true,
     },
+    idCardFileKey: {
+      type: String,
+      required: [true, '請上傳身份證文件 Please upload ID card document'],
+    },
     idCardFileUrl: {
       type: String,
       required: [true, '請上傳身份證文件 Please upload ID card document'],
@@ -119,6 +126,10 @@ const supplierSchema = new Schema<ISupplier>(
         name: {
           type: String,
           required: [true, '請輸入認證名稱 Please enter certification name'],
+        },
+        fileKey: {
+          type: String,
+          required: [true, '請上傳專業認證文件 Please upload professional certification document'],
         },
         fileUrl: {
           type: String,
@@ -150,6 +161,10 @@ const supplierSchema = new Schema<ISupplier>(
       cardHolderName: {
         type: String,
         required: [true, '請輸入持卡人姓名 Please enter card holder name'],
+      },
+      fileKey: {
+        type: String,
+        required: [true, '請上傳銀行帳戶文件 Please upload bank account document'],
       },
       fileUrl: {
         type: String,

@@ -3,9 +3,9 @@ main = "worker.js"
 compatibility_date = "2023-03-14"
 
 [vars]
-MONGODB_URI = "your-mongodb-uri"
+R2_PUBLIC_DOMAIN = "111ce057f7b2b1eb01636893efe1aa24.r2.cloudflarestorage.com"
 
-[[d1_databases]]
-binding = "DB"
-database_name = "gracefulcare"
-database_id = "your-database-id" 
+[[r2_buckets]]
+binding = "DOCUMENTS_BUCKET"
+bucket_name = "fileuploader"
+preview_bucket_name = "fileuploader" 

@@ -22,7 +22,8 @@
     "mongoose": "^7.0.3",
     "multer": "^1.4.5-lts.1",
     "winston": "^3.8.2",
-    "hono": "^3.3.2"
+    "hono": "^3.3.2",
+    "@cloudflare/workers-types": "^4.20240208.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230807.0",

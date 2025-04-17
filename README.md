@@ -1,175 +1,167 @@
-# GracefulCare - Caregiver Application Portal
+# Graceful Care Application Form
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-4.0.0-blue.svg)](https://www.typescriptlang.org/)
-
-A modern web application for managing caregiver applications with comprehensive form handling, file upload capabilities, and bilingual support (Chinese/English).
-
-## Table of Contents
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [API Endpoints](#api-endpoints)
-- [Setup Instructions](#setup-instructions)
-- [Development](#development)
-- [Features in Detail](#features-in-detail)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
+A modern, responsive web application for supplier registration and management, built with React, TypeScript, and Material-UI.
 
 ## Features
-- Caregiver information input with validation
-- Bilingual support (Chinese/English)
-- File upload functionality for documents
-- Interactive FAQ section
-- Responsive design
-- Real-time form validation
-- Secure data handling
-- MongoDB database integration
-- RESTful API endpoints
+
+- **Responsive Design**: Optimized for all devices with dynamic height adjustments
+- **Form Validation**: Comprehensive validation using Formik and Yup
+- **File Upload**: Support for multiple file types (images and PDFs)
+- **Multi-language Support**: Bilingual interface (English and Chinese)
+- **Dynamic Form Fields**: Support for adding/removing professional certifications
+- **Real-time Validation**: Immediate feedback on form inputs
+- **Secure File Handling**: File type and size validation
+- **Modern UI**: Clean, accessible interface with Material-UI components
 
 ## Tech Stack
-- Frontend: 
-  - React with TypeScript
-  - Material-UI (MUI) for UI components
-  - Formik for form handling
-  - Yup for validation
-  - Axios for API calls
 
-- Backend:
-  - Node.js with Express
-  - MongoDB for database
-  - Mongoose for ODM
-  - Express-validator for input validation
-  - Multer for file uploads
+- **Frontend**:
+  - React 18
+  - TypeScript
+  - Material-UI
+  - Formik & Yup
+  - date-fns
+  - React Router
+  - Axios
 
-## Project Structure
-```
-AI_Web/
-├── client/                 # Frontend (React + TypeScript)
-│   ├── public/            # Static files
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   │   ├── FAQSection.tsx
-│   │   │   └── SupplierForm.tsx
-│   │   ├── pages/        # Page components
-│   │   │   └── SupplierApplication.tsx
-│   │   ├── services/     # API services
-│   │   │   └── api.ts
-│   │   ├── types/        # TypeScript type definitions
-│   │   │   └── supplier.ts
-│   │   └── App.tsx       # Main application component
-│   └── package.json
-│
-└── server/                # Backend (Node.js + Express)
-    ├── src/
-    │   ├── models/       # Database models
-    │   │   └── supplier.js
-    │   ├── routes/       # API routes
-    │   │   └── supplierRoutes.js
-    │   └── index.js      # Server entry point
-    └── package.json
-```
+- **Backend**:
+  - Node.js
+  - Express
+  - Cloudflare Workers
+  - Multer (for file uploads)
+  - Winston (for logging)
 
-## API Endpoints
-- POST /suppliers - Create new caregiver application
-- GET /suppliers - Get all caregiver applications
-- GET /suppliers/:id - Get single caregiver application
-- PUT /suppliers/:id - Update caregiver application
-- DELETE /suppliers/:id - Delete caregiver application
+## Prerequisites
 
-## Setup Instructions
-
-### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB
-- npm or yarn
+- Node.js (v18.17.1 or higher)
+- npm (v9.6.7 or higher)
 - Git
 
-### Installation
+## Installation
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/yourusername/gracefulcare.git
-   cd gracefulcare
-   ```
+1. Clone the repository:
+```bash
+git clone https://github.com/Gracefulcarehk/applicationForm.git
+cd applicationForm
+```
 
 2. Install dependencies:
-   ```bash
-   # Install backend dependencies
-   cd server
-   npm install
+```bash
+# Install client dependencies
+cd client
+npm install
 
-   # Install frontend dependencies
-   cd ../client
-   npm install
-   ```
+# Install server dependencies
+cd ../server
+npm install
+```
 
-3. Set up environment variables:
-   - Create `.env` files in both client and server directories
-   - Server .env example:
-     ```
-     PORT=5003
-     MONGODB_URI=mongodb://localhost:27017/gracefulcare
-     ```
-   - Client .env example:
-     ```
-     REACT_APP_API_URL=http://localhost:5003
-     ```
+3. Create environment files:
+```bash
+# Client
+cp client/.env.example client/.env
 
-4. Start the development servers:
-   ```bash
-   # Start backend server
-   cd server
-   npm run dev
+# Server
+cp server/.env.example server/.env
+```
 
-   # Start frontend development server
-   cd client
-   npm start
-   ```
+4. Update environment variables in both `.env` files with your configuration.
 
 ## Development
-- Frontend runs on: http://localhost:3000
-- Backend runs on: http://localhost:5003
-- MongoDB runs on: mongodb://localhost:27017
 
-## Features in Detail
+1. Start the development server:
+```bash
+# Start client
+cd client
+npm run dev
 
-### Form Features
-- Comprehensive validation
-- File upload support
-- Bilingual field labels
-- Real-time error messages
-- Bank selection with automatic code population
-- District selection with bilingual options
+# Start server
+cd ../server
+npm run dev
+```
 
-### FAQ Section
-- Interactive accordion design
-- Bilingual questions and answers
-- Responsive layout
-- Clean and modern styling
+2. The application will be available at `http://localhost:3000`
 
-### File Upload
-- Support for multiple file types
-- Size validation
-- Type validation
-- Secure storage
+## Building for Production
 
-## Troubleshooting
+1. Build the application:
+```bash
+# Build client
+cd client
+npm run build
 
-### Common Issues
-1. Port already in use (EADDRINUSE)
-   - Solution: Change PORT in .env or kill the process using the port
-   - Command: `lsof -i :5003` then `kill -9 <PID>`
+# Build server
+cd ../server
+npm run build
+```
 
-2. MongoDB connection issues
-   - Ensure MongoDB is running
-   - Check connection string in .env
+2. Start the production server:
+```bash
+cd server
+npm start
+```
 
-3. ESLint warnings
-   - Run `npm run lint` to check for issues
-   - Fix or disable specific warnings as needed
+## Project Structure
+
+```
+applicationForm/
+├── client/                 # Frontend React application
+│   ├── public/            # Static files
+│   ├── src/               # Source files
+│   │   ├── components/    # React components
+│   │   ├── services/      # API services
+│   │   ├── types/         # TypeScript types
+│   │   └── utils/         # Utility functions
+│   └── package.json       # Frontend dependencies
+│
+├── server/                # Backend server
+│   ├── src/              # Source files
+│   │   ├── api/          # API routes
+│   │   ├── services/     # Business logic
+│   │   └── utils/        # Utility functions
+│   └── package.json      # Backend dependencies
+│
+└── README.md             # Project documentation
+```
+
+## Form Fields
+
+The application form includes the following sections:
+
+1. **Personal Information**
+   - Name (English & Chinese)
+   - Email
+   - Phone
+   - Gender
+   - Date of Birth
+   - HKID
+   - ID Card Upload
+
+2. **Address Information**
+   - Street Address
+   - Address Line 2
+   - District
+
+3. **Bank Information**
+   - Bank Name
+   - Bank Code
+   - Account Number
+   - Card Holder Name
+   - Bank Statement Upload
+
+4. **Professional Certifications**
+   - Certification Name
+   - Expiry Date
+   - Certification Document Upload
+
+## File Upload Requirements
+
+- **Supported File Types**:
+  - Images: JPG, JPEG, PNG
+  - Documents: PDF
+
+- **File Size Limits**:
+  - Maximum size: 5MB per file
 
 ## Contributing
 
@@ -179,16 +171,205 @@ AI_Web/
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Commit Message Guidelines
-- Use present tense ("Add feature" not "Added feature")
-- Use imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Limit the first line to 72 characters or less
-- Reference issues and pull requests after the first line
-
-### Code Style
-- Follow the existing code style
-- Run `npm run lint` before committing
-- Ensure all tests pass
-
 ## License
+
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support, please contact the development team at [support@gracefulcare.hk](mailto:support@gracefulcare.hk)
+
+## Environment Variables
+
+### Client (.env)
+```
+VITE_API_URL=http://localhost:5003
+VITE_UPLOAD_URL=http://localhost:5003/upload
+```
+
+### Server (.env)
+```
+PORT=5003
+NODE_ENV=development
+LOG_LEVEL=info
+UPLOAD_DIR=./uploads
+MAX_FILE_SIZE=5242880  # 5MB in bytes
+```
+
+## API Documentation
+
+### Endpoints
+
+- **POST /api/suppliers**
+  - Create a new supplier application
+  - Accepts multipart/form-data with form fields and files
+
+- **GET /api/suppliers**
+  - List all supplier applications
+  - Returns JSON array of suppliers
+
+- **GET /api/suppliers/:id**
+  - Get a specific supplier application
+  - Returns JSON object of supplier details
+
+- **POST /api/upload**
+  - Upload files (ID card, bank statement, certifications)
+  - Returns file URL on success
+
+## Browser Support
+
+The application is tested and supported on the following browsers:
+- Chrome (latest 2 versions)
+- Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+- Edge (latest 2 versions)
+
+## Testing
+
+1. Run unit tests:
+```bash
+# Client tests
+cd client
+npm test
+
+# Server tests
+cd ../server
+npm test
+```
+
+2. Run linting:
+```bash
+# Client linting
+cd client
+npm run lint
+
+# Server linting
+cd ../server
+npm run lint
+```
+
+## Deployment
+
+### Cloudflare Workers Deployment
+
+1. Install Wrangler CLI:
+```bash
+npm install -g wrangler
+```
+
+2. Login to Cloudflare:
+```bash
+wrangler login
+```
+
+3. Deploy the worker:
+```bash
+cd server
+wrangler deploy
+```
+
+### Database Setup
+
+The application uses Cloudflare Workers KV for data storage. To set up:
+
+1. Create a KV namespace:
+```bash
+wrangler kv:namespace create "SUPPLIER_DATA"
+```
+
+2. Add the namespace binding to `wrangler.toml`:
+```toml
+[[kv_namespaces]]
+binding = "SUPPLIER_DATA"
+id = "<namespace-id>"
+```
+
+## Security Considerations
+
+### File Upload Security
+- All uploaded files are validated for type and size
+- Files are stored with unique, random names
+- File paths are not exposed in URLs
+- Regular security audits of uploaded files
+
+### Data Protection
+- All sensitive data is encrypted at rest
+- HTTPS is enforced for all communications
+- Regular security updates and patches
+- Access logs are maintained for audit purposes
+
+### API Security
+- Rate limiting implemented
+- CORS properly configured
+- Input validation on all endpoints
+- Regular security testing
+
+## Monitoring and Logging
+
+### Application Monitoring
+- Error tracking with Winston
+- Performance monitoring
+- Uptime monitoring
+- Resource usage tracking
+
+### Logging Levels
+- ERROR: System errors and critical issues
+- WARN: Potential problems
+- INFO: General operational information
+- DEBUG: Detailed debugging information
+
+## Backup Procedures
+
+1. **Data Backup**
+   - Daily automated backups of KV store
+   - Weekly full system backups
+   - Backup retention: 30 days
+
+2. **File Storage Backup**
+   - Real-time replication of uploaded files
+   - Daily integrity checks
+   - Offsite backup storage
+
+## Error Handling
+
+The application implements comprehensive error handling:
+
+1. **Frontend Error Boundaries**
+   - Global error boundary for the application
+   - Component-level error boundaries
+   - Graceful degradation for failed features
+
+2. **API Error Handling**
+   - Standardized error responses
+   - Retry mechanisms for transient failures
+   - Circuit breakers for external services
+
+## Performance Optimization
+
+1. **Frontend**
+   - Code splitting
+   - Lazy loading of components
+   - Image optimization
+   - Caching strategies
+
+2. **Backend**
+   - Response caching
+   - Query optimization
+   - Connection pooling
+   - Load balancing
+
+## Maintenance
+
+### Regular Tasks
+- Weekly dependency updates
+- Monthly security audits
+- Quarterly performance reviews
+- Annual architecture review
+
+### Update Procedures
+1. Create backup
+2. Deploy to staging
+3. Run test suite
+4. Deploy to production
+5. Verify functionality
+6. Monitor for issues
