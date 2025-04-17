@@ -337,37 +337,53 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       // Create FormData to handle file uploads
       const formData = new FormData();
       
-      // Add all non-file fields to formData
-      Object.entries(values).forEach(([key, value]) => {
-        if (key !== 'idCardFileUrl' && key !== 'professionalCertifications' && key !== 'bankAccount') {
-          if (typeof value === 'object') {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, value);
-          }
-        }
-      });
+      // Add basic fields
+      formData.append('supplierType', values.supplierType);
+      formData.append('gender', values.gender);
+      formData.append('hkid', values.hkid);
+      formData.append('status', values.status);
+
+      // Add contact person fields
+      formData.append('contactPerson[nameEn]', values.contactPerson.nameEn);
+      formData.append('contactPerson[nameCn]', values.contactPerson.nameCn);
+      formData.append('contactPerson[email]', values.contactPerson.email);
+      formData.append('contactPerson[phone]', values.contactPerson.phone);
+
+      // Add address fields
+      formData.append('address[street]', values.address.street);
+      formData.append('address[addressLine2]', values.address.addressLine2);
+      formData.append('address[district]', values.address.district);
+
+      // Add date of birth fields
+      formData.append('dateOfBirth[day]', values.dateOfBirth.day);
+      formData.append('dateOfBirth[month]', values.dateOfBirth.month);
+      formData.append('dateOfBirth[year]', values.dateOfBirth.year);
 
       // Handle ID card file
       if (selectedIdCardFile) {
         formData.append('idCardFile', selectedIdCardFile);
       }
 
-      // Handle bank account file
+      // Handle bank account info and file
+      formData.append('bankAccount[bank]', values.bankAccount.bank);
+      formData.append('bankAccount[bankCode]', values.bankAccount.bankCode);
+      formData.append('bankAccount[accountNumber]', values.bankAccount.accountNumber);
+      formData.append('bankAccount[cardHolderName]', values.bankAccount.cardHolderName);
       if (selectedBankFile) {
         formData.append('bankFile', selectedBankFile);
       }
 
-      // Handle professional certification files
+      // Handle professional certifications
       values.professionalCertifications.forEach((cert, index) => {
+        formData.append(`professionalCertifications[${index}][name]`, cert.name);
+        formData.append(`professionalCertifications[${index}][expiryDate]`, cert.expiryDate);
+        formData.append(`professionalCertifications[${index}][uploadDate]`, cert.uploadDate.toISOString());
+        
         const file = selectedFiles[index];
         if (file) {
-          formData.append(`certificationFiles`, file);
+          formData.append(`certificationFiles[${index}]`, file);
         }
       });
-
-      // Add bank account info
-      formData.append('bankAccount', JSON.stringify(values.bankAccount));
 
       if (onSubmit) {
         await onSubmit(values);
