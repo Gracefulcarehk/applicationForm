@@ -777,10 +777,10 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                                 上傳專業認證/資格 Upload Professional Certification / Qualification
                               </Button>
                             </label>
-                            {formik.values.professionalCertifications[index].fileUrl && (
+                            {formik.values.professionalCertifications[index]?.fileUrl && (
                               <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                                 <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                                  Selected file: {formik.values.professionalCertifications[index].fileUrl.split('/').pop()}
+                                  Selected file: {formik.values.professionalCertifications[index]?.fileUrl?.split('/').pop()}
                                 </Typography>
                               </Box>
                             )}
