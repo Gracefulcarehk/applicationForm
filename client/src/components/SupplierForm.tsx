@@ -12,8 +12,6 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
-  CircularProgress,
-  LinearProgress,
 } from '@mui/material';
 import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched, useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -185,7 +183,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     severity: 'success',
   });
   const navigate = useNavigate();
-  const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -325,7 +322,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
   const handleSubmit = useCallback(async (values: SupplierFormData) => {
     try {
-      setSubmitting(true);
       setUploadProgress(0);
 
       const formData = new FormData();
@@ -354,8 +350,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     } catch (error) {
       console.error('Error submitting form:', error);
       setError(error instanceof Error ? error.message : config.messages.errors.uploadFailed);
-    } finally {
-      setSubmitting(false);
     }
   }, [navigate]);
 
