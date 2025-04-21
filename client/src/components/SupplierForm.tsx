@@ -156,8 +156,6 @@ const hongKongDistricts = [
   { name: 'Yuen Long', nameCn: '元朗區' }
 ];
 
-const supplierTypes = Object.values(SupplierType);
-
 const SupplierForm: React.FC<SupplierFormProps> = ({
   initialValues = defaultFormValues,
   onSubmit,
@@ -184,7 +182,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   });
   const navigate = useNavigate();
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
 
   // Track viewport height changes
   useEffect(() => {
@@ -345,11 +342,19 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       if (response.success) {
         navigate('/thank-you');
       } else {
-        setError(response.error || config.messages.errors.uploadFailed);
+        setSnackbar({
+          open: true,
+          message: response.error || config.messages.errors.uploadFailed,
+          severity: 'error'
+        });
       }
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setError(error instanceof Error ? error.message : config.messages.errors.uploadFailed);
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setSnackbar({
+        open: true,
+        message: err instanceof Error ? err.message : config.messages.errors.uploadFailed,
+        severity: 'error'
+      });
     }
   }, [navigate]);
 

@@ -2,12 +2,12 @@ export enum SupplierType {
   RN = 'RN',
   EN = 'EN',
   PCW = 'PCW',
-  HCA = 'HCA',
+  HCA = 'HCA'
 }
 
 export enum Gender {
   M = 'M',
-  F = 'F',
+  F = 'F'
 }
 
 export const supplierTypeOptions = [
