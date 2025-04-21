@@ -1,21 +1,37 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler';
 import { supplierRoutes } from './routes/supplierRoutes';
 import { logger } from './utils/logger';
+import R2Service from './services/r2Service';
 
 // Load environment variables
-dotenv.config();
+require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5003;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Initialize R2Service
+const r2Service = new R2Service({
+  accountId: process.env.R2_ACCOUNT_ID || '',
+  accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+  secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  bucketName: process.env.CLOUDFLARE_BUCKET_NAME || '',
+});
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || '')
+  .then(() => {
+    logger.info('Connected to MongoDB');
+  })
+  .catch((error) => {
+    logger.error('MongoDB connection error:', error);
+  });
 
 // Routes
 app.use('/api/suppliers', supplierRoutes);
@@ -23,44 +39,10 @@ app.use('/api/suppliers', supplierRoutes);
 // Error handling
 app.use(errorHandler);
 
-// MongoDB connection
-const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGODB_URI;
-    if (!mongoURI) {
-      throw new Error('MONGODB_URI is not defined in environment variables');
-    }
-
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      family: 4,
-      authSource: 'admin',
-    });
-
-    logger.info('MongoDB Connected Successfully');
-  } catch (error) {
-    logger.error('MongoDB Connection Error:', error);
-    process.exit(1);
-  }
-};
-
-// Start server
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    logger.error('Failed to start server:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  logger.info(`Server is running on port ${PORT}`);
+});
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {

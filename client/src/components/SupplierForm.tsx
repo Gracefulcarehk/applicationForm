@@ -13,70 +13,94 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import { Formik, Form, Field, FieldArray, FormikErrors } from 'formik';
+import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched, useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Supplier, SupplierType, Gender, ProfessionalCertification } from '../types/supplier';
+import { SupplierFormData, Certification } from '../types/supplier';
+import { SupplierType, Gender } from '../types/enums';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format, parse } from 'date-fns';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { supplierApi } from '../services/api';
+import { createSupplier } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-
-const validationSchema = Yup.object({
-  supplierType: Yup.string().required('請選擇供應商類型 Please select supplier type'),
-  contactPerson: Yup.object({
-    nameEn: Yup.string().required('請輸入英文姓名 Please enter name in English'),
-    nameCn: Yup.string().required('請輸入中文姓名 Please enter name in Chinese'),
-    email: Yup.string().email('請輸入有效的電郵地址 Please enter a valid email address').required('請輸入電郵地址 Please enter email address'),
-    phone: Yup.string().required('請輸入聯絡電話 Please enter phone number'),
-  }),
-  gender: Yup.string().required('請選擇性別 Please select gender'),
-  address: Yup.object({
-    street: Yup.string(),
-    addressLine2: Yup.string(),
-    district: Yup.string().required('請選擇地區 Please select district'),
-  }),
-  hkid: Yup.string().required('請輸入香港身份證號碼 Please enter HKID number'),
-  idCardFileUrl: Yup.string().required('請上傳身份證文件 Please upload ID card document'),
-  dateOfBirth: Yup.object({
-    day: Yup.string()
-      .matches(/^[1-9]|[12][0-9]|3[01]$/, '日期必須在1至31之間 Day must be between 1 and 31')
-      .required('請輸入日期 Please enter day'),
-    month: Yup.string()
-      .matches(/^[1-9]|1[0-2]$/, '月份必須在1至12之間 Month must be between 1 and 12')
-      .required('請輸入月份 Please enter month'),
-    year: Yup.string()
-      .matches(/^19[0-9]{2}|20[0-9]{2}$/, '年份必須在1900至今年之間 Year must be between 1900 and current year')
-      .required('請輸入年份 Please enter year'),
-  }).required('請輸入出生日期 Please enter date of birth'),
-  professionalCertifications: Yup.array().of(
-    Yup.object({
-      name: Yup.string().required('請輸入認證名稱 Please enter certification name'),
-      fileUrl: Yup.string().required('請上傳專業認證文件 Please upload professional certification document'),
-      expiryDate: Yup.string().required('請輸入認證到期日 Please enter certification expiry date'),
-    })
-  ).min(1, '請至少上傳一個專業認證 Please upload at least one professional certification'),
-  bankAccount: Yup.object({
-    bank: Yup.string().required('請選擇銀行 Please select bank'),
-    bankCode: Yup.string().required('請輸入銀行代碼 Please enter bank code'),
-    accountNumber: Yup.string()
-      .required('請輸入銀行帳戶號碼 Please enter bank account number')
-      .matches(/^\d+$/, '銀行帳戶號碼必須為數字 Bank account number must contain only numbers'),
-    cardHolderName: Yup.string()
-      .required('請輸入持卡人姓名 Please enter card holder name')
-      .matches(/^[a-zA-Z\s]+$/, '持卡人姓名必須為英文 Card holder name must be in English'),
-    fileUrl: Yup.string().required('請上傳銀行帳戶文件 Please upload bank account document'),
-  }).required('請填寫銀行帳戶資料 Please fill in bank account information'),
-});
+import { supplierTypeOptions, genderOptions } from '../data/formData';
+import UploadProgress from './UploadProgress';
 
 interface SupplierFormProps {
-  initialValues?: Omit<Supplier, '_id'>;
-  onSubmit?: (values: Omit<Supplier, '_id'>) => Promise<void>;
+  initialValues?: SupplierFormData;
+  onSubmit?: (values: SupplierFormData) => Promise<void>;
   submitButtonText?: string;
 }
+
+const validationSchema = Yup.object({
+  supplierType: Yup.string().required('Required'),
+  contactPerson: Yup.object({
+    nameEn: Yup.string().required('Required'),
+    nameCn: Yup.string().required('Required'),
+    email: Yup.string().email('Invalid email').required('Required'),
+    phone: Yup.string().required('Required'),
+  }),
+  gender: Yup.string().required('Required'),
+  dateOfBirth: Yup.object({
+    day: Yup.string().required('Required'),
+    month: Yup.string().required('Required'),
+    year: Yup.string().required('Required'),
+  }),
+  hkid: Yup.string().required('Required'),
+  address: Yup.object({
+    street: Yup.string().required('Required'),
+    addressLine2: Yup.string(),
+    district: Yup.string().required('Required'),
+  }),
+  bankAccount: Yup.object({
+    bank: Yup.string().required('Required'),
+    bankCode: Yup.string().required('Required'),
+    accountNumber: Yup.string().required('Required'),
+    cardHolderName: Yup.string().required('Required'),
+  }),
+  certifications: Yup.array().of(
+    Yup.object({
+      name: Yup.string().required('Required'),
+      issuingOrganization: Yup.string().required('Required'),
+      issueDate: Yup.string().required('Required'),
+      file: Yup.mixed(),
+    })
+  ),
+});
+
+const defaultFormValues: SupplierFormData = {
+  supplierType: SupplierType.RN,
+  contactPerson: {
+    nameEn: '',
+    nameCn: '',
+    email: '',
+    phone: '',
+  },
+  gender: Gender.M,
+  dateOfBirth: {
+    day: '',
+    month: '',
+    year: '',
+  },
+  hkid: '',
+  address: {
+    street: '',
+    addressLine2: '',
+    district: '',
+  },
+  bankAccount: {
+    bank: '',
+    bankCode: '',
+    accountNumber: '',
+    cardHolderName: '',
+  },
+  status: 'Pending',
+  certifications: [],
+  idCardFile: undefined,
+  bankFile: undefined,
+};
 
 const hongKongBanks = [
   { name: 'HSBC (Hongkong and Shanghai Banking Corporation)', nameCn: '滙豐銀行', code: '004' },
@@ -110,47 +134,6 @@ const hongKongBanks = [
   { name: 'China Huishang Bank (Hong Kong)', nameCn: '徽商銀行(香港)', code: '362' },
 ];
 
-const defaultValues: Omit<Supplier, '_id'> = {
-  supplierType: 'RN',
-  contactPerson: {
-    nameEn: '',
-    nameCn: '',
-    email: '',
-    phone: '',
-  },
-  gender: 'M',
-  address: {
-    street: '',
-    addressLine2: '',
-    district: '',
-  },
-  hkid: '',
-  idCardFileUrl: '',
-  dateOfBirth: {
-    day: '',
-    month: '',
-    year: '',
-  },
-  documents: [],
-  professionalCertifications: [{
-    name: '',
-    fileUrl: '',
-    expiryDate: '',
-    uploadDate: new Date(),
-  }],
-  bankAccount: {
-    bank: '',
-    bankCode: '',
-    accountNumber: '',
-    cardHolderName: '',
-    fileUrl: '',
-  },
-  status: 'Pending',
-};
-
-const supplierTypes: SupplierType[] = ['RN', 'EN', 'PCW', 'HCA'];
-const genderOptions: Gender[] = ['M', 'F'];
-
 const hongKongDistricts = [
   { name: 'Central and Western', nameCn: '中西區' },
   { name: 'Eastern', nameCn: '東區' },
@@ -172,10 +155,12 @@ const hongKongDistricts = [
   { name: 'Yuen Long', nameCn: '元朗區' }
 ];
 
+const supplierTypes = Object.values(SupplierType);
+
 const SupplierForm: React.FC<SupplierFormProps> = ({
-  initialValues = defaultValues,
+  initialValues = defaultFormValues,
   onSubmit,
-  submitButtonText = '提交申請 Submit Application',
+  submitButtonText = 'Submit',
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -197,6 +182,10 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     severity: 'success',
   });
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Track viewport height changes
   useEffect(() => {
@@ -332,86 +321,108 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     }
   };
 
-  const handleSubmit = async (values: Omit<Supplier, '_id'>) => {
+  const handleSubmit = async (values: SupplierFormData) => {
     try {
-      // Create FormData to handle file uploads
+      setIsSubmitting(true);
+      setError(null);
+      setUploadProgress(0);
+
+      // Create FormData for file uploads
       const formData = new FormData();
       
-      // Add basic fields
-      formData.append('supplierType', values.supplierType);
-      formData.append('gender', values.gender);
-      formData.append('hkid', values.hkid);
-      formData.append('status', values.status);
-
-      // Add contact person fields
-      formData.append('contactPerson[nameEn]', values.contactPerson.nameEn);
-      formData.append('contactPerson[nameCn]', values.contactPerson.nameCn);
-      formData.append('contactPerson[email]', values.contactPerson.email);
-      formData.append('contactPerson[phone]', values.contactPerson.phone);
-
-      // Add address fields
-      formData.append('address[street]', values.address.street);
-      formData.append('address[addressLine2]', values.address.addressLine2);
-      formData.append('address[district]', values.address.district);
-
-      // Add date of birth fields
-      formData.append('dateOfBirth[day]', values.dateOfBirth.day);
-      formData.append('dateOfBirth[month]', values.dateOfBirth.month);
-      formData.append('dateOfBirth[year]', values.dateOfBirth.year);
-
-      // Handle ID card file
-      if (selectedIdCardFile) {
-        formData.append('idCardFile', selectedIdCardFile);
-      }
-
-      // Handle bank account info and file
-      formData.append('bankAccount[bank]', values.bankAccount.bank);
-      formData.append('bankAccount[bankCode]', values.bankAccount.bankCode);
-      formData.append('bankAccount[accountNumber]', values.bankAccount.accountNumber);
-      formData.append('bankAccount[cardHolderName]', values.bankAccount.cardHolderName);
-      if (selectedBankFile) {
-        formData.append('bankFile', selectedBankFile);
-      }
-
-      // Handle professional certifications
-      values.professionalCertifications.forEach((cert, index) => {
-        formData.append(`professionalCertifications[${index}][name]`, cert.name);
-        formData.append(`professionalCertifications[${index}][expiryDate]`, cert.expiryDate);
-        formData.append(`professionalCertifications[${index}][uploadDate]`, cert.uploadDate.toISOString());
-        
-        const file = selectedFiles[index];
-        if (file) {
-          formData.append(`certificationFiles[${index}]`, file);
+      // Add form fields individually for better efficiency
+      const { idCardFile, bankFile, certifications, ...formFields } = values;
+      
+      // Add basic form fields
+      Object.entries(formFields).forEach(([key, value]) => {
+        if (typeof value === 'object') {
+          Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+            formData.append(`${key}[${nestedKey}]`, nestedValue);
+          });
+        } else {
+          formData.append(key, value);
         }
       });
 
-      if (onSubmit) {
-        await onSubmit(values);
-      } else {
-        await supplierApi.createSupplier(formData);
+      // Add bank file if exists
+      if (bankFile) {
+        formData.append('bankFile', bankFile);
       }
+
+      // Add ID card file if exists
+      if (idCardFile) {
+        formData.append('idCardFile', idCardFile);
+      }
+
+      // Add certifications
+      certifications.forEach((cert, index) => {
+        formData.append(`certifications[${index}][name]`, cert.name);
+        formData.append(`certifications[${index}][issuingOrganization]`, cert.issuingOrganization);
+        formData.append(`certifications[${index}][issueDate]`, cert.issueDate);
+        
+        if (cert.file) {
+          formData.append(`certifications[${index}][file]`, cert.file);
+        }
+      });
+
+      // Submit the form with progress tracking
+      const response = await createSupplier(formData, (progressEvent) => {
+        if (progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(progress);
+        }
+      });
       
-      // Show success message
-      setSnackbar({
-        open: true,
-        message: '申請已成功提交 Application submitted successfully',
-        severity: 'success',
-      });
-
-      // Navigate to thank you page after a short delay
-      setTimeout(() => {
-        navigate('/thank-you');
-      }, 2000);
-
-    } catch (error) {
-      console.error('Form submission error:', error);
-      setSnackbar({
-        open: true,
-        message: error instanceof Error ? error.message : '提交申請時發生錯誤 Error submitting application',
-        severity: 'error',
-      });
+      if (response.success) {
+        setSuccessMessage('Application submitted successfully!');
+        setTimeout(() => {
+          navigate('/thank-you');
+        }, 2000);
+      } else {
+        setError(response.error || 'Failed to submit application');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while submitting the application');
+      console.error('Error submitting form:', err);
+    } finally {
+      setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
+
+  const formik = useFormik<SupplierFormData>({
+    initialValues: {
+      supplierType: SupplierType.RN,
+      contactPerson: {
+        nameEn: '',
+        nameCn: '',
+        email: '',
+        phone: '',
+      },
+      gender: Gender.M,
+      dateOfBirth: {
+        day: '',
+        month: '',
+        year: '',
+      },
+      hkid: '',
+      address: {
+        street: '',
+        addressLine2: '',
+        district: '',
+      },
+      bankAccount: {
+        bank: '',
+        bankCode: '',
+        accountNumber: '',
+        cardHolderName: '',
+      },
+      status: 'Pending',
+      certifications: [],
+    },
+    validationSchema,
+    onSubmit: handleSubmit,
+  });
 
   return (
     <Paper 
@@ -452,605 +463,650 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
-        {({ errors, touched, isSubmitting, values, setFieldValue }) => (
-          <Form>
-            <Grid 
-              container 
-              spacing={{ xs: 2, sm: 3 }}
-              sx={{
-                flex: 1,
-                minHeight: { xs: `calc(${viewportHeight}px - 200px)`, sm: 'auto' },
-                '@supports (min-height: -webkit-fill-available)': {
-                  minHeight: { xs: '-webkit-fill-available', sm: 'auto' },
-                },
-              }}
-            >
-              <Grid item xs={12}>
-                <Field
-                  name="supplierType"
-                  as={TextField}
-                  select
-                  label="Supplier Type"
-                  fullWidth
-                  error={touched.supplierType && Boolean(errors.supplierType)}
-                  helperText={touched.supplierType && errors.supplierType}
-                >
-                  {supplierTypes.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Field>
-              </Grid>
+        {({ errors, touched, isSubmitting, values, setFieldValue }) => {
+          const certErrors = errors.certifications as FormikErrors<Certification>[] | undefined;
+          const certTouched = touched.certifications as FormikTouched<Certification>[] | undefined;
 
-              <Grid item xs={12}>
-                <Typography 
-                  variant="h6" 
-                  gutterBottom 
-                  sx={{ 
-                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
-                    fontWeight: 700,
-                    color: '#000000',
-                    position: 'sticky',
-                    top: { xs: '60px', sm: '80px' },
-                    zIndex: 1,
-                    backgroundColor: 'background.paper',
-                    padding: { xs: '8px 0', sm: '16px 0' },
-                    marginBottom: { xs: '8px', sm: '16px' },
-                  }}
-                >
-                  個人資料 Personal Information
-                </Typography>
-                <Grid container spacing={{ xs: 1, sm: 2 }}>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="contactPerson.nameCn"
-                      as={TextField}
-                      label="姓名 (中)"
-                      fullWidth
-                      error={touched.contactPerson?.nameCn && Boolean(errors.contactPerson?.nameCn)}
-                      helperText={touched.contactPerson?.nameCn && errors.contactPerson?.nameCn}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="contactPerson.nameEn"
-                      as={TextField}
-                      label="Full Name (ENG)"
-                      fullWidth
-                      error={touched.contactPerson?.nameEn && Boolean(errors.contactPerson?.nameEn)}
-                      helperText={touched.contactPerson?.nameEn && errors.contactPerson?.nameEn}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="contactPerson.email"
-                      as={TextField}
-                      label="電郵 Email"
-                      fullWidth
-                      error={touched.contactPerson?.email && Boolean(errors.contactPerson?.email)}
-                      helperText={touched.contactPerson?.email && errors.contactPerson?.email}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="contactPerson.phone"
-                      as={TextField}
-                      label="聯絡電話 Phone"
-                      fullWidth
-                      error={touched.contactPerson?.phone && Boolean(errors.contactPerson?.phone)}
-                      helperText={touched.contactPerson?.phone && errors.contactPerson?.phone}
-                    />
-                  </Grid>
+          return (
+            <Form>
+              <Grid 
+                container 
+                spacing={{ xs: 2, sm: 3 }}
+                sx={{
+                  flex: 1,
+                  minHeight: { xs: `calc(${viewportHeight}px - 200px)`, sm: 'auto' },
+                  '@supports (min-height: -webkit-fill-available)': {
+                    minHeight: { xs: '-webkit-fill-available', sm: 'auto' },
+                  },
+                }}
+              >
+                <Grid item xs={12}>
+                  <Field
+                    name="supplierType"
+                    as={TextField}
+                    select
+                    label="Supplier Type"
+                    fullWidth
+                    error={touched.supplierType && Boolean(errors.supplierType)}
+                    helperText={touched.supplierType && errors.supplierType}
+                  >
+                    {supplierTypeOptions.map((option) => (
+                      <MenuItem value={option.value} key={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Field>
                 </Grid>
-              </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="gender"
-                  as={TextField}
-                  select
-                  label="性別 Gender"
-                  fullWidth
-                  error={touched.gender && Boolean(errors.gender)}
-                  helperText={touched.gender && errors.gender}
-                >
-                  {genderOptions.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </Field>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle1" gutterBottom>
-                  出生日期 Birthday
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={4}>
-                    <Field
-                      name="dateOfBirth.day"
-                      as={TextField}
-                      label="Day"
-                      type="number"
-                      inputProps={{ min: 1, max: 31 }}
-                      fullWidth
-                      error={touched.dateOfBirth?.day && Boolean(errors.dateOfBirth?.day)}
-                      helperText={touched.dateOfBirth?.day && errors.dateOfBirth?.day}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Field
-                      name="dateOfBirth.month"
-                      as={TextField}
-                      label="Month"
-                      type="number"
-                      inputProps={{ min: 1, max: 12 }}
-                      fullWidth
-                      error={touched.dateOfBirth?.month && Boolean(errors.dateOfBirth?.month)}
-                      helperText={touched.dateOfBirth?.month && errors.dateOfBirth?.month}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DatePicker
-                        label="Year"
-                        views={['year']}
-                        value={values.dateOfBirth.year ? parse(values.dateOfBirth.year, 'yyyy', new Date()) : null}
-                        onChange={(newValue) => {
-                          if (newValue) {
-                            setFieldValue('dateOfBirth.year', format(newValue, 'yyyy'));
-                          }
-                        }}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            error: touched.dateOfBirth?.year && Boolean(errors.dateOfBirth?.year),
-                            helperText: touched.dateOfBirth?.year && errors.dateOfBirth?.year,
-                          },
-                        }}
-                        minDate={new Date(1900, 0, 1)}
-                        maxDate={new Date()}
+                <Grid item xs={12}>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom 
+                    sx={{ 
+                      fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                      fontWeight: 700,
+                      color: '#000000',
+                      position: 'sticky',
+                      top: { xs: '60px', sm: '80px' },
+                      zIndex: 1,
+                      backgroundColor: 'background.paper',
+                      padding: { xs: '8px 0', sm: '16px 0' },
+                      marginBottom: { xs: '8px', sm: '16px' },
+                    }}
+                  >
+                    個人資料 Personal Information
+                  </Typography>
+                  <Grid container spacing={{ xs: 1, sm: 2 }}>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="contactPerson.nameCn"
+                        as={TextField}
+                        label="姓名 (中)"
+                        fullWidth
+                        error={touched.contactPerson?.nameCn && Boolean(errors.contactPerson?.nameCn)}
+                        helperText={touched.contactPerson?.nameCn && errors.contactPerson?.nameCn}
                       />
-                    </LocalizationProvider>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="contactPerson.nameEn"
+                        as={TextField}
+                        label="Full Name (ENG)"
+                        fullWidth
+                        error={touched.contactPerson?.nameEn && Boolean(errors.contactPerson?.nameEn)}
+                        helperText={touched.contactPerson?.nameEn && errors.contactPerson?.nameEn}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="contactPerson.email"
+                        as={TextField}
+                        label="電郵 Email"
+                        fullWidth
+                        error={touched.contactPerson?.email && Boolean(errors.contactPerson?.email)}
+                        helperText={touched.contactPerson?.email && errors.contactPerson?.email}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="contactPerson.phone"
+                        as={TextField}
+                        label="聯絡電話 Phone"
+                        fullWidth
+                        error={touched.contactPerson?.phone && Boolean(errors.contactPerson?.phone)}
+                        helperText={touched.contactPerson?.phone && errors.contactPerson?.phone}
+                      />
+                    </Grid>
                   </Grid>
                 </Grid>
-              </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Field
-                  name="hkid"
-                  as={TextField}
-                  label="香港身份證 HKID"
-                  fullWidth
-                  error={touched.hkid && Boolean(errors.hkid)}
-                  helperText={touched.hkid && errors.hkid}
-                />
-              </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Field
+                    name="gender"
+                    as={TextField}
+                    select
+                    label="性別 Gender"
+                    fullWidth
+                    error={touched.gender && Boolean(errors.gender)}
+                    helperText={touched.gender && errors.gender}
+                  >
+                    {genderOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Field>
+                </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <input
-                    accept="image/*,.pdf"
-                    style={{ display: 'none' }}
-                    id="id-card-file"
-                    type="file"
-                    onChange={(e) => handleIdCardFileChange(e, setFieldValue)}
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    出生日期 Birthday
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Field
+                        name="dateOfBirth.day"
+                        as={TextField}
+                        label="Day"
+                        type="number"
+                        inputProps={{ min: 1, max: 31 }}
+                        fullWidth
+                        error={touched.dateOfBirth?.day && Boolean(errors.dateOfBirth?.day)}
+                        helperText={touched.dateOfBirth?.day && errors.dateOfBirth?.day}
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Field
+                        name="dateOfBirth.month"
+                        as={TextField}
+                        label="Month"
+                        type="number"
+                        inputProps={{ min: 1, max: 12 }}
+                        fullWidth
+                        error={touched.dateOfBirth?.month && Boolean(errors.dateOfBirth?.month)}
+                        helperText={touched.dateOfBirth?.month && errors.dateOfBirth?.month}
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <LocalizationProvider dateAdapter={AdapterDateFns}>
+                        <DatePicker
+                          label="Year"
+                          views={['year']}
+                          value={values.dateOfBirth.year ? parse(values.dateOfBirth.year, 'yyyy', new Date()) : null}
+                          onChange={(newValue) => {
+                            if (newValue) {
+                              setFieldValue('dateOfBirth.year', format(newValue, 'yyyy'));
+                            }
+                          }}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              error: touched.dateOfBirth?.year && Boolean(errors.dateOfBirth?.year),
+                              helperText: touched.dateOfBirth?.year && errors.dateOfBirth?.year,
+                            },
+                          }}
+                          minDate={new Date(1900, 0, 1)}
+                          maxDate={new Date()}
+                        />
+                      </LocalizationProvider>
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Field
+                    name="hkid"
+                    as={TextField}
+                    label="香港身份證 HKID"
+                    fullWidth
+                    error={touched.hkid && Boolean(errors.hkid)}
+                    helperText={touched.hkid && errors.hkid}
                   />
-                  <label htmlFor="id-card-file">
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      fullWidth
-                      sx={{ 
-                        borderColor: idCardFileError ? 'error.main' : '#5D6D9B',
-                        color: '#5D6D9B',
-                        '&:hover': {
-                          borderColor: '#5D6D9B',
-                          backgroundColor: 'rgba(93, 109, 155, 0.04)',
-                        },
-                      }}
-                    >
-                      上傳香港身份證 Upload HKID Card
-                    </Button>
-                  </label>
-                  {selectedIdCardFile && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                        Selected file: {selectedIdCardFile.name}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleRemoveIdCardFile(setFieldValue)}
-                        sx={{ ml: 1 }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  )}
-                  {idCardFileError && (
-                    <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                      {idCardFileError}
-                    </Typography>
-                  )}
-                </Box>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography 
-                  variant="h6" 
-                  gutterBottom 
-                  sx={{ 
-                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
-                    fontWeight: 700,
-                    color: '#000000',
-                    position: 'sticky',
-                    top: { xs: '60px', sm: '80px' },
-                    zIndex: 1,
-                    backgroundColor: 'background.paper',
-                    padding: { xs: '8px 0', sm: '16px 0' },
-                    marginBottom: { xs: '8px', sm: '16px' },
-                  }}
-                >
-                  住址 Address
-                </Typography>
-                <Grid container spacing={{ xs: 1, sm: 2 }}>
-                  <Grid item xs={12}>
-                    <Field
-                      name="address.street"
-                      as={TextField}
-                      label="詳細地址 1 Address Line 1"
-                      fullWidth
-                      error={touched.address?.street && Boolean(errors.address?.street)}
-                      helperText={touched.address?.street && errors.address?.street}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field
-                      name="address.addressLine2"
-                      as={TextField}
-                      label="詳細地址 2 Address Line 2"
-                      fullWidth
-                      error={touched.address?.addressLine2 && Boolean(errors.address?.addressLine2)}
-                      helperText={touched.address?.addressLine2 && errors.address?.addressLine2}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field
-                      name="address.district"
-                      as={TextField}
-                      select
-                      label="地區 District"
-                      fullWidth
-                      error={touched.address?.district && Boolean(errors.address?.district)}
-                      helperText={touched.address?.district && errors.address?.district}
-                    >
-                      {hongKongDistricts.map((district) => (
-                        <MenuItem key={district.name} value={district.name}>
-                          {district.nameCn} {district.name}
-                        </MenuItem>
-                      ))}
-                    </Field>
-                  </Grid>
                 </Grid>
-              </Grid>
 
-              <Grid item xs={12}>
-                <Typography 
-                  variant="h6" 
-                  gutterBottom 
-                  sx={{ 
-                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
-                    fontWeight: 700,
-                    color: '#000000',
-                    position: 'sticky',
-                    top: { xs: '60px', sm: '80px' },
-                    zIndex: 1,
-                    backgroundColor: 'background.paper',
-                    padding: { xs: '8px 0', sm: '16px 0' },
-                    marginBottom: { xs: '8px', sm: '16px' },
-                  }}
-                >
-                  銀行轉帳資料 Bank Account for Fund Transfer
-                </Typography>
-                <Grid container spacing={{ xs: 1, sm: 2 }}>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      as={TextField}
-                      fullWidth
-                      select
-                      label="銀行名稱 Bank"
-                      name="bankAccount.bank"
-                      error={touched.bankAccount?.bank && !!errors.bankAccount?.bank}
-                      helperText={touched.bankAccount?.bank && errors.bankAccount?.bank}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBankChange(e, setFieldValue)}
-                    >
-                      {hongKongBanks.map((bank) => (
-                        <MenuItem key={bank.code} value={bank.name}>
-                          {bank.nameCn} {bank.name}
-                        </MenuItem>
-                      ))}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="bankAccount.bankCode"
-                      as={TextField}
-                      label="銀行代碼 Bank Code"
-                      fullWidth
-                      disabled
-                      error={touched.bankAccount?.bankCode && Boolean(errors.bankAccount?.bankCode)}
-                      helperText={touched.bankAccount?.bankCode && errors.bankAccount?.bankCode}
+                <Grid item xs={12} sm={6}>
+                  <Box>
+                    <input
+                      accept="image/*,.pdf"
+                      style={{ display: 'none' }}
+                      id="id-card-file"
+                      type="file"
+                      onChange={(e) => handleIdCardFileChange(e, setFieldValue)}
                     />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="bankAccount.accountNumber"
-                      as={TextField}
-                      label="銀行帳戶號碼 Bank Account Number"
-                      fullWidth
-                      error={touched.bankAccount?.accountNumber && Boolean(errors.bankAccount?.accountNumber)}
-                      helperText={touched.bankAccount?.accountNumber && errors.bankAccount?.accountNumber}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field
-                      name="bankAccount.cardHolderName"
-                      as={TextField}
-                      label="持卡人姓名 Bank Card Holder Name (EN)"
-                      fullWidth
-                      error={touched.bankAccount?.cardHolderName && Boolean(errors.bankAccount?.cardHolderName)}
-                      helperText={touched.bankAccount?.cardHolderName && errors.bankAccount?.cardHolderName}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box>
-                      <input
-                        accept="image/*,.pdf"
-                        style={{ display: 'none' }}
-                        id="bank-account-file"
-                        type="file"
-                        onChange={(e) => handleBankFileChange(e, setFieldValue)}
-                      />
-                      <label htmlFor="bank-account-file">
-                        <Button
-                          variant="outlined"
-                          component="span"
-                          fullWidth
-                          sx={{ 
-                            borderColor: bankFileError ? 'error.main' : '#5D6D9B',
-                            color: '#5D6D9B',
-                            '&:hover': {
-                              borderColor: '#5D6D9B',
-                              backgroundColor: 'rgba(93, 109, 155, 0.04)',
-                            },
-                          }}
-                        >
-                          上傳銀行卡副本 Upload Bank Card Copy
-                        </Button>
-                      </label>
-                      {selectedBankFile && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                          <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                            Selected file: {selectedBankFile.name}
-                          </Typography>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemoveBankFile(setFieldValue)}
-                            sx={{ ml: 1 }}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
-                      )}
-                      {bankFileError && (
-                        <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                          {bankFileError}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography 
-                  variant="h6" 
-                  gutterBottom 
-                  sx={{ 
-                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
-                    fontWeight: 700,
-                    color: '#000000',
-                    position: 'sticky',
-                    top: { xs: '60px', sm: '80px' },
-                    zIndex: 1,
-                    backgroundColor: 'background.paper',
-                    padding: { xs: '8px 0', sm: '16px 0' },
-                    marginBottom: { xs: '8px', sm: '16px' },
-                  }}
-                >
-                  專業認證/資格 Professional Certification / Qualification
-                </Typography>
-                <FieldArray name="professionalCertifications">
-                  {({ push, remove }) => (
-                    <div>
-                      {values.professionalCertifications.map((_, index) => (
-                        <Box 
-                          key={index} 
-                          sx={{ 
-                            mb: { xs: 2, sm: 3 }, 
-                            p: { xs: 1, sm: 2 }, 
-                            border: '1px solid #e0e0e0', 
-                            borderRadius: 1,
-                            '@supports (padding: max(0px))': {
-                              padding: {
-                                xs: `max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right))`,
-                                sm: '16px',
-                              },
-                            },
-                          }}
-                        >
-                          <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
-                              <Field
-                                name={`professionalCertifications.${index}.name`}
-                                as={TextField}
-                                label="認證名稱 Name of certification"
-                                fullWidth
-                                error={touched.professionalCertifications?.[index]?.name && Boolean((errors.professionalCertifications?.[index] as FormikErrors<ProfessionalCertification>)?.name)}
-                                helperText={touched.professionalCertifications?.[index]?.name && (errors.professionalCertifications?.[index] as FormikErrors<ProfessionalCertification>)?.name}
-                              />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <Box>
-                                <input
-                                  accept="image/*,.pdf"
-                                  style={{ display: 'none' }}
-                                  id={`certification-file-${index}`}
-                                  type="file"
-                                  onChange={(e) => handleFileChange(e, index, setFieldValue)}
-                                />
-                                <label htmlFor={`certification-file-${index}`}>
-                                  <Button
-                                    variant="outlined"
-                                    component="span"
-                                    fullWidth
-                                    sx={{ 
-                                      borderColor: fileErrors[index] ? 'error.main' : '#5D6D9B',
-                                      color: '#5D6D9B',
-                                      '&:hover': {
-                                        borderColor: '#5D6D9B',
-                                        backgroundColor: 'rgba(93, 109, 155, 0.04)',
-                                      },
-                                    }}
-                                  >
-                                    上傳專業認證/資格 Upload Professional Certification / Qualification
-                                  </Button>
-                                </label>
-                                {selectedFiles[index] && (
-                                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                    <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                                      Selected file: {selectedFiles[index]?.name}
-                                    </Typography>
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      onClick={() => handleRemoveFile(index, setFieldValue)}
-                                      sx={{ ml: 1 }}
-                                    >
-                                      <DeleteIcon />
-                                    </IconButton>
-                                  </Box>
-                                )}
-                                {fileErrors[index] && (
-                                  <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                                    {fileErrors[index]}
-                                  </Typography>
-                                )}
-                              </Box>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                <DatePicker
-                                  label="認證有效期 Certification Expiry Date"
-                                  value={values.professionalCertifications[index].expiryDate ? parse(values.professionalCertifications[index].expiryDate, 'dd/MM/yyyy', new Date()) : null}
-                                  onChange={(newValue) => {
-                                    if (newValue) {
-                                      setFieldValue(`professionalCertifications.${index}.expiryDate`, format(newValue, 'dd/MM/yyyy'));
-                                    }
-                                  }}
-                                  slotProps={{
-                                    textField: {
-                                      fullWidth: true,
-                                      error: touched.professionalCertifications?.[index]?.expiryDate && Boolean((errors.professionalCertifications?.[index] as FormikErrors<ProfessionalCertification>)?.expiryDate),
-                                      helperText: touched.professionalCertifications?.[index]?.expiryDate && (errors.professionalCertifications?.[index] as FormikErrors<ProfessionalCertification>)?.expiryDate,
-                                    },
-                                  }}
-                                  minDate={new Date()}
-                                />
-                              </LocalizationProvider>
-                            </Grid>
-                            {index > 0 && (
-                              <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button
-                                  variant="outlined"
-                                  color="error"
-                                  onClick={() => remove(index)}
-                                  startIcon={<DeleteIcon />}
-                                >
-                                  Remove Certification
-                                </Button>
-                              </Grid>
-                            )}
-                          </Grid>
-                        </Box>
-                      ))}
+                    <label htmlFor="id-card-file">
                       <Button
                         variant="outlined"
-                        onClick={() => push({ name: '', fileUrl: '', expiryDate: '', uploadDate: new Date() })}
-                        sx={{ mt: 2 }}
-                        startIcon={<AddIcon />}
+                        component="span"
+                        fullWidth
+                        sx={{ 
+                          borderColor: idCardFileError ? 'error.main' : '#5D6D9B',
+                          color: '#5D6D9B',
+                          '&:hover': {
+                            borderColor: '#5D6D9B',
+                            backgroundColor: 'rgba(93, 109, 155, 0.04)',
+                          },
+                        }}
                       >
-                        Add Another Certification
+                        上傳香港身份證 Upload HKID Card
                       </Button>
-                    </div>
-                  )}
-                </FieldArray>
-              </Grid>
+                    </label>
+                    {selectedIdCardFile && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                        <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                          Selected file: {selectedIdCardFile.name}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveIdCardFile(setFieldValue)}
+                          sx={{ ml: 1 }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    )}
+                    {idCardFileError && (
+                      <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                        {idCardFileError}
+                      </Typography>
+                    )}
+                  </Box>
+                </Grid>
 
-              <Grid item xs={12}>
-                <Box 
-                  sx={{ 
-                    mt: { xs: 2, sm: 4 }, 
-                    display: 'flex', 
-                    justifyContent: 'center',
-                    position: 'sticky',
-                    bottom: 0,
-                    zIndex: 1,
-                    backgroundColor: 'background.paper',
-                    padding: { xs: '16px 0', sm: '24px 0' },
-                    borderTop: '1px solid rgba(0, 0, 0, 0.12)',
-                    '@supports (padding: max(0px))': {
-                      padding: {
-                        xs: `max(16px, env(safe-area-inset-bottom)) 0`,
-                        sm: '24px 0',
-                      },
-                    },
-                  }}
-                >
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    disabled={isSubmitting}
-                    fullWidth={isMobile}
+                <Grid item xs={12}>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom 
+                    sx={{ 
+                      fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                      fontWeight: 700,
+                      color: '#000000',
+                      position: 'sticky',
+                      top: { xs: '60px', sm: '80px' },
+                      zIndex: 1,
+                      backgroundColor: 'background.paper',
+                      padding: { xs: '8px 0', sm: '16px 0' },
+                      marginBottom: { xs: '8px', sm: '16px' },
+                    }}
                   >
-                    {isSubmitting ? 'Submitting...' : submitButtonText}
-                  </Button>
-                </Box>
+                    住址 Address
+                  </Typography>
+                  <Grid container spacing={{ xs: 1, sm: 2 }}>
+                    <Grid item xs={12}>
+                      <Field
+                        name="address.street"
+                        as={TextField}
+                        label="詳細地址 1 Address Line 1"
+                        fullWidth
+                        error={touched.address?.street && Boolean(errors.address?.street)}
+                        helperText={touched.address?.street && errors.address?.street}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Field
+                        name="address.addressLine2"
+                        as={TextField}
+                        label="詳細地址 2 Address Line 2"
+                        fullWidth
+                        error={touched.address?.addressLine2 && Boolean(errors.address?.addressLine2)}
+                        helperText={touched.address?.addressLine2 && errors.address?.addressLine2}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Field
+                        name="address.district"
+                        as={TextField}
+                        select
+                        label="地區 District"
+                        fullWidth
+                        error={touched.address?.district && Boolean(errors.address?.district)}
+                        helperText={touched.address?.district && errors.address?.district}
+                      >
+                        {hongKongDistricts.map((district) => (
+                          <MenuItem key={district.name} value={district.name}>
+                            {district.nameCn} {district.name}
+                          </MenuItem>
+                        ))}
+                      </Field>
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom 
+                    sx={{ 
+                      fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                      fontWeight: 700,
+                      color: '#000000',
+                      position: 'sticky',
+                      top: { xs: '60px', sm: '80px' },
+                      zIndex: 1,
+                      backgroundColor: 'background.paper',
+                      padding: { xs: '8px 0', sm: '16px 0' },
+                      marginBottom: { xs: '8px', sm: '16px' },
+                    }}
+                  >
+                    銀行轉帳資料 Bank Account for Fund Transfer
+                  </Typography>
+                  <Grid container spacing={{ xs: 1, sm: 2 }}>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        as={TextField}
+                        fullWidth
+                        select
+                        label="銀行名稱 Bank"
+                        name="bankAccount.bank"
+                        error={touched.bankAccount?.bank && !!errors.bankAccount?.bank}
+                        helperText={touched.bankAccount?.bank && errors.bankAccount?.bank}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBankChange(e, setFieldValue)}
+                      >
+                        {hongKongBanks.map((bank) => (
+                          <MenuItem key={bank.code} value={bank.name}>
+                            {bank.nameCn} {bank.name}
+                          </MenuItem>
+                        ))}
+                      </Field>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="bankAccount.bankCode"
+                        as={TextField}
+                        label="銀行代碼 Bank Code"
+                        fullWidth
+                        disabled
+                        error={touched.bankAccount?.bankCode && Boolean(errors.bankAccount?.bankCode)}
+                        helperText={touched.bankAccount?.bankCode && errors.bankAccount?.bankCode}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="bankAccount.accountNumber"
+                        as={TextField}
+                        label="銀行帳戶號碼 Bank Account Number"
+                        fullWidth
+                        error={touched.bankAccount?.accountNumber && Boolean(errors.bankAccount?.accountNumber)}
+                        helperText={touched.bankAccount?.accountNumber && errors.bankAccount?.accountNumber}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Field
+                        name="bankAccount.cardHolderName"
+                        as={TextField}
+                        label="持卡人姓名 Bank Card Holder Name (EN)"
+                        fullWidth
+                        error={touched.bankAccount?.cardHolderName && Boolean(errors.bankAccount?.cardHolderName)}
+                        helperText={touched.bankAccount?.cardHolderName && errors.bankAccount?.cardHolderName}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Box>
+                        <input
+                          accept="image/*,.pdf"
+                          style={{ display: 'none' }}
+                          id="bank-account-file"
+                          type="file"
+                          onChange={(e) => handleBankFileChange(e, setFieldValue)}
+                        />
+                        <label htmlFor="bank-account-file">
+                          <Button
+                            variant="outlined"
+                            component="span"
+                            fullWidth
+                            sx={{ 
+                              borderColor: bankFileError ? 'error.main' : '#5D6D9B',
+                              color: '#5D6D9B',
+                              '&:hover': {
+                                borderColor: '#5D6D9B',
+                                backgroundColor: 'rgba(93, 109, 155, 0.04)',
+                              },
+                            }}
+                          >
+                            上傳銀行卡副本 Upload Bank Card Copy
+                          </Button>
+                        </label>
+                        {selectedBankFile && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                            <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                              Selected file: {selectedBankFile.name}
+                            </Typography>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleRemoveBankFile(setFieldValue)}
+                              sx={{ ml: 1 }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                        )}
+                        {bankFileError && (
+                          <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                            {bankFileError}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom 
+                    sx={{ 
+                      fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                      fontWeight: 700,
+                      color: '#000000',
+                      position: 'sticky',
+                      top: { xs: '60px', sm: '80px' },
+                      zIndex: 1,
+                      backgroundColor: 'background.paper',
+                      padding: { xs: '8px 0', sm: '16px 0' },
+                      marginBottom: { xs: '8px', sm: '16px' },
+                    }}
+                  >
+                    專業認證/資格 Professional Certification / Qualification
+                  </Typography>
+                  <FieldArray name="certifications">
+                    {({ push, remove }) => (
+                      <div>
+                        {values.certifications.map((cert: Certification, index: number) => (
+                          <Box 
+                            key={index} 
+                            sx={{ 
+                              mb: { xs: 2, sm: 3 }, 
+                              p: { xs: 1, sm: 2 }, 
+                              border: '1px solid #e0e0e0', 
+                              borderRadius: 1,
+                              '@supports (padding: max(0px))': {
+                                padding: {
+                                  xs: `max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right))`,
+                                  sm: '16px',
+                                },
+                              },
+                            }}
+                          >
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} sm={6}>
+                                <Field
+                                  name={`certifications.${index}.name`}
+                                  as={TextField}
+                                  label="認證名稱 Name of certification"
+                                  fullWidth
+                                  error={
+                                    certTouched?.[index]?.name && 
+                                    Boolean(certErrors?.[index]?.name)
+                                  }
+                                  helperText={
+                                    certTouched?.[index]?.name && 
+                                    certErrors?.[index]?.name
+                                  }
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <Field
+                                  name={`certifications.${index}.issuingOrganization`}
+                                  as={TextField}
+                                  label="發證機構 Issuing Organization"
+                                  fullWidth
+                                  error={
+                                    certTouched?.[index]?.issuingOrganization && 
+                                    Boolean(certErrors?.[index]?.issuingOrganization)
+                                  }
+                                  helperText={
+                                    certTouched?.[index]?.issuingOrganization && 
+                                    certErrors?.[index]?.issuingOrganization
+                                  }
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                  <DatePicker
+                                    label="發證日期 Issue Date"
+                                    value={
+                                      values.certifications[index].issueDate ? 
+                                      parse(values.certifications[index].issueDate, 'yyyy-MM-dd', new Date()) : 
+                                      null
+                                    }
+                                    onChange={(newValue) => {
+                                      if (newValue) {
+                                        setFieldValue(
+                                          `certifications.${index}.issueDate`, 
+                                          format(newValue, 'yyyy-MM-dd')
+                                        );
+                                      }
+                                    }}
+                                    slotProps={{
+                                      textField: {
+                                        fullWidth: true,
+                                        error: 
+                                          certTouched?.[index]?.issueDate && 
+                                          Boolean(certErrors?.[index]?.issueDate),
+                                        helperText: 
+                                          certTouched?.[index]?.issueDate && 
+                                          certErrors?.[index]?.issueDate,
+                                      },
+                                    }}
+                                  />
+                                </LocalizationProvider>
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <Box>
+                                  <input
+                                    accept="image/*,.pdf"
+                                    style={{ display: 'none' }}
+                                    id={`certification-file-${index}`}
+                                    type="file"
+                                    onChange={(e) => handleFileChange(e, index, setFieldValue)}
+                                  />
+                                  <label htmlFor={`certification-file-${index}`}>
+                                    <Button
+                                      variant="outlined"
+                                      component="span"
+                                      fullWidth
+                                      sx={{ 
+                                        borderColor: fileErrors[index] ? 'error.main' : '#5D6D9B',
+                                        color: '#5D6D9B',
+                                        '&:hover': {
+                                          borderColor: '#5D6D9B',
+                                          backgroundColor: 'rgba(93, 109, 155, 0.04)',
+                                        },
+                                      }}
+                                    >
+                                      上傳專業認證/資格 Upload Professional Certification / Qualification
+                                    </Button>
+                                  </label>
+                                  {selectedFiles[index] && (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                                      <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                                        Selected file: {selectedFiles[index]?.name}
+                                      </Typography>
+                                      <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() => handleRemoveFile(index, setFieldValue)}
+                                        sx={{ ml: 1 }}
+                                      >
+                                        <DeleteIcon />
+                                      </IconButton>
+                                    </Box>
+                                  )}
+                                  {fileErrors[index] && (
+                                    <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                                      {fileErrors[index]}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </Grid>
+                              {index > 0 && (
+                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                  <Button
+                                    variant="outlined"
+                                    color="error"
+                                    onClick={() => remove(index)}
+                                    startIcon={<DeleteIcon />}
+                                  >
+                                    Remove Certification
+                                  </Button>
+                                </Grid>
+                              )}
+                            </Grid>
+                          </Box>
+                        ))}
+                        <Button
+                          variant="outlined"
+                          onClick={() => push({ 
+                            name: '', 
+                            issuingOrganization: '', 
+                            issueDate: '' 
+                          })}
+                          sx={{ mt: 2 }}
+                          startIcon={<AddIcon />}
+                        >
+                          Add Another Certification
+                        </Button>
+                      </div>
+                    )}
+                  </FieldArray>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Box 
+                    sx={{ 
+                      mt: { xs: 2, sm: 4 }, 
+                      display: 'flex', 
+                      justifyContent: 'center',
+                      position: 'sticky',
+                      bottom: 0,
+                      zIndex: 1,
+                      backgroundColor: 'background.paper',
+                      padding: { xs: '16px 0', sm: '24px 0' },
+                      borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+                      '@supports (padding: max(0px))': {
+                        padding: {
+                          xs: `max(16px, env(safe-area-inset-bottom)) 0`,
+                          sm: '24px 0',
+                        },
+                      },
+                    }}
+                  >
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      size="large"
+                      disabled={isSubmitting}
+                      fullWidth={isMobile}
+                    >
+                      {isSubmitting ? 'Submitting...' : submitButtonText}
+                    </Button>
+                  </Box>
+                </Grid>
               </Grid>
-            </Grid>
-            <Snackbar
-              open={snackbar.open}
-              autoHideDuration={6000}
-              onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-              <Alert
+              <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
                 onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-                severity={snackbar.severity}
-                sx={{ width: '100%' }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
               >
-                {snackbar.message}
-              </Alert>
-            </Snackbar>
-          </Form>
-        )}
+                <Alert
+                  onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                  severity={snackbar.severity}
+                  sx={{ width: '100%' }}
+                >
+                  {snackbar.message}
+                </Alert>
+              </Snackbar>
+            </Form>
+          );
+        }}
       </Formik>
+      
+      {uploadProgress > 0 && uploadProgress < 100 && (
+        <UploadProgress progress={uploadProgress} />
+      )}
     </Paper>
   );
 };

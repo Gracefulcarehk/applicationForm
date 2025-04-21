@@ -1,3 +1,5 @@
+import { SupplierType, Gender } from './enums';
+
 export interface ContactPerson {
   nameEn: string;
   nameCn: string;
@@ -5,9 +7,15 @@ export interface ContactPerson {
   phone: string;
 }
 
+export interface DateOfBirth {
+  day: string;
+  month: string;
+  year: string;
+}
+
 export interface Address {
   street: string;
-  addressLine2: string;
+  addressLine2?: string;
   district: string;
 }
 
@@ -16,29 +24,13 @@ export interface BankAccount {
   bankCode: string;
   accountNumber: string;
   cardHolderName: string;
-  fileUrl: string;
 }
 
-export interface Document {
-  type: 'Business License' | 'Tax Certificate' | 'Insurance' | 'Other';
-  fileUrl: string;
-  uploadDate: Date;
-}
-
-export interface ProfessionalCertification {
+export interface Certification {
   name: string;
-  fileUrl: string;
-  expiryDate: string; // Format: DD/MM/YYYY
-  uploadDate: Date;
-}
-
-export type SupplierType = 'RN' | 'EN' | 'PCW' | 'HCA';
-export type Gender = 'M' | 'F';
-
-export interface DateOfBirth {
-  day: string;
-  month: string;
-  year: string;
+  issuingOrganization: string;
+  issueDate: string;
+  file?: File;
 }
 
 export interface Supplier {
@@ -46,14 +38,14 @@ export interface Supplier {
   supplierType: SupplierType;
   contactPerson: ContactPerson;
   gender: Gender;
-  address: Address;
-  hkid: string;
-  idCardFileUrl: string;
   dateOfBirth: DateOfBirth;
-  documents: Document[];
-  professionalCertifications: ProfessionalCertification[];
+  hkid: string;
+  address: Address;
   bankAccount: BankAccount;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  createdAt?: Date;
-  updatedAt?: Date;
-} 
+  status: string;
+  idCardFile?: File;
+  bankFile?: File;
+  certifications: Certification[];
+}
+
+export type SupplierFormData = Omit<Supplier, '_id'>; 
