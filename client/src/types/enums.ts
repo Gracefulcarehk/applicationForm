@@ -1,13 +1,17 @@
 export enum SupplierType {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   RN = 'RN',
   EN = 'EN',
   PCW = 'PCW',
   HCA = 'HCA'
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 }
 
 export enum Gender {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   M = 'M',
   F = 'F'
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 }
 
 export const supplierTypeOptions = [
