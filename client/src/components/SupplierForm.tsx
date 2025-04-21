@@ -11,7 +11,8 @@ import {
   Snackbar,
   Alert,
   useTheme,
-  useMediaQuery,
+  CircularProgress,
+  LinearProgress
 } from '@mui/material';
 import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched } from 'formik';
 import * as Yup from 'yup';
@@ -161,7 +162,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   onSubmit,
   submitButtonText = 'Submit',
 }) => {
-  const theme = useTheme();
   const [viewportHeight, setViewportHeight] = useState<number>(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedBankFile, setSelectedBankFile] = useState<File | null>(null);
