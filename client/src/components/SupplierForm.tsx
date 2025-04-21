@@ -13,7 +13,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched, useFormik } from 'formik';
+import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched } from 'formik';
 import * as Yup from 'yup';
 import { SupplierFormData, Certification } from '../types/supplier';
 import { SupplierType, Gender } from '../types/enums';
@@ -162,11 +162,8 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   submitButtonText = 'Submit',
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [viewportHeight, setViewportHeight] = useState<number>(0);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<{ [key: number]: File | null }>({});
-  const [fileErrors, setFileErrors] = useState<{ [key: number]: string }>({});
   const [selectedBankFile, setSelectedBankFile] = useState<File | null>(null);
   const [bankFileError, setBankFileError] = useState<string>('');
   const [selectedIdCardFile, setSelectedIdCardFile] = useState<File | null>(null);
@@ -203,41 +200,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, index: number, setFieldValue: (field: string, value: any) => void) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Check file type
-      const fileType = file.type;
-      const isImage = fileType.startsWith('image/');
-      const isPDF = fileType === 'application/pdf';
-      
-      if (!isImage && !isPDF) {
-        setFileErrors(prev => ({ ...prev, [index]: '只接受圖片和PDF文件 Only image and PDF files are allowed' }));
-        setSelectedFiles(prev => ({ ...prev, [index]: null }));
-        setFieldValue(`professionalCertifications.${index}.fileUrl`, '');
-        return;
-      }
-
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setFileErrors(prev => ({ ...prev, [index]: '文件大小不能超過5MB File size should be less than 5MB' }));
-        setSelectedFiles(prev => ({ ...prev, [index]: null }));
-        setFieldValue(`professionalCertifications.${index}.fileUrl`, '');
-        return;
-      }
-
-      setFileErrors(prev => ({ ...prev, [index]: '' }));
-      setSelectedFiles(prev => ({ ...prev, [index]: file }));
-      setFieldValue(`professionalCertifications.${index}.fileUrl`, URL.createObjectURL(file));
-    }
-  };
-
-  const handleRemoveFile = (index: number, setFieldValue: (field: string, value: any) => void) => {
-    setSelectedFiles(prev => ({ ...prev, [index]: null }));
-    setFileErrors(prev => ({ ...prev, [index]: '' }));
-    setFieldValue(`professionalCertifications.${index}.fileUrl`, '');
-  };
 
   const handleBankFileChange = (event: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
     const file = event.target.files?.[0];
@@ -307,14 +269,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     setSelectedIdCardFile(null);
     setIdCardFileError('');
     setFieldValue('idCardFileUrl', '');
-  };
-
-  const handleBankChange = (event: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
-    const selectedBank = hongKongBanks.find(bank => bank.name === event.target.value);
-    if (selectedBank) {
-      setFieldValue('bankAccount.bank', selectedBank.name);
-      setFieldValue('bankAccount.bankCode', selectedBank.code);
-    }
   };
 
   const handleSubmit = useCallback(async (values: SupplierFormData) => {
@@ -721,7 +675,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           name="bankAccount.bank"
                           error={touched.bankAccount?.bank && !!errors.bankAccount?.bank}
                           helperText={touched.bankAccount?.bank && errors.bankAccount?.bank}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBankChange(e, setFieldValue)}
                         >
                           {hongKongBanks.map((bank) => (
                             <MenuItem key={bank.code} value={bank.name}>
