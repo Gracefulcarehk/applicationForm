@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -12,6 +12,8 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
+  CircularProgress,
+  LinearProgress,
 } from '@mui/material';
 import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched, useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -23,10 +25,11 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format, parse } from 'date-fns';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { createSupplier } from '../services/api';
+import { supplierApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { supplierTypeOptions, genderOptions } from '../data/formData';
 import UploadProgress from './UploadProgress';
+import { config } from '../config';
 
 interface SupplierFormProps {
   initialValues?: SupplierFormData;
@@ -321,74 +324,45 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     }
   };
 
-  const handleSubmit = async (values: SupplierFormData) => {
+  const handleSubmit = useCallback(async (values: SupplierFormData) => {
     try {
       setIsSubmitting(true);
       setError(null);
       setUploadProgress(0);
 
-      // Create FormData for file uploads
       const formData = new FormData();
-      
-      // Add form fields individually for better efficiency
-      const { idCardFile, bankFile, certifications, ...formFields } = values;
-      
-      // Add basic form fields
-      Object.entries(formFields).forEach(([key, value]) => {
-        if (typeof value === 'object') {
-          Object.entries(value).forEach(([nestedKey, nestedValue]) => {
-            formData.append(`${key}[${nestedKey}]`, nestedValue);
-          });
-        } else {
+      Object.entries(values).forEach(([key, value]) => {
+        if (value instanceof File) {
           formData.append(key, value);
+        } else if (value instanceof Date) {
+          formData.append(key, format(value, 'yyyy-MM-dd'));
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, value.toString());
         }
       });
 
-      // Add bank file if exists
-      if (bankFile) {
-        formData.append('bankFile', bankFile);
-      }
-
-      // Add ID card file if exists
-      if (idCardFile) {
-        formData.append('idCardFile', idCardFile);
-      }
-
-      // Add certifications
-      certifications.forEach((cert, index) => {
-        formData.append(`certifications[${index}][name]`, cert.name);
-        formData.append(`certifications[${index}][issuingOrganization]`, cert.issuingOrganization);
-        formData.append(`certifications[${index}][issueDate]`, cert.issueDate);
-        
-        if (cert.file) {
-          formData.append(`certifications[${index}][file]`, cert.file);
-        }
+      const response = await supplierApi.createSupplier(formData, (progressEvent) => {
+        const progress = progressEvent.total
+          ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          : 0;
+        setUploadProgress(progress);
       });
 
-      // Submit the form with progress tracking
-      const response = await createSupplier(formData, (progressEvent) => {
-        if (progressEvent.total) {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(progress);
-        }
-      });
-      
       if (response.success) {
         setSuccessMessage('Application submitted successfully!');
         setTimeout(() => {
           navigate('/thank-you');
         }, 2000);
       } else {
-        setError(response.error || 'Failed to submit application');
+        setError(response.error || config.messages.errors.uploadFailed);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while submitting the application');
-      console.error('Error submitting form:', err);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setError(error instanceof Error ? error.message : config.messages.errors.uploadFailed);
     } finally {
       setIsSubmitting(false);
-      setUploadProgress(0);
     }
-  };
+  }, [navigate]);
 
   const formik = useFormik<SupplierFormData>({
     initialValues: {
