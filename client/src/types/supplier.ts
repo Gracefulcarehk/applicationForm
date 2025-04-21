@@ -33,6 +33,12 @@ export interface Certification {
   file?: File;
 }
 
+export interface Document {
+  type: string;
+  fileUrl: string;
+  uploadDate: string;
+}
+
 export interface Supplier {
   _id?: string;
   supplierType: SupplierType;
@@ -46,6 +52,7 @@ export interface Supplier {
   idCardFile?: File;
   bankFile?: File;
   certifications: Certification[];
+  documents?: Document[];
 }
 
 export type SupplierFormData = Omit<Supplier, '_id'>; 
