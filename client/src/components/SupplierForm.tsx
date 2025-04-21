@@ -14,7 +14,7 @@ import {
 import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched } from 'formik';
 import * as Yup from 'yup';
 import { SupplierFormData, Certification } from '../types/supplier';
-import { SupplierType, Gender } from '../types/enums';
+import { SupplierType, Gender, supplierTypeOptions, genderOptions } from '../types/enums';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -23,7 +23,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { supplierApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { supplierTypeOptions, genderOptions } from '../data/formData';
 import UploadProgress from './UploadProgress';
 import { config } from '../config';
 
