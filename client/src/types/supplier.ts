@@ -1,4 +1,4 @@
-import { SupplierType, Gender } from './enums';
+import { SUPPLIER_TYPE_RN, SUPPLIER_TYPE_EN, SUPPLIER_TYPE_PCW, SUPPLIER_TYPE_HCA, GENDER_M, GENDER_F } from './enums';
 
 export interface ContactPerson {
   nameEn: string;
@@ -41,9 +41,9 @@ export interface Document {
 
 export interface Supplier {
   _id?: string;
-  supplierType: SupplierType;
+  supplierType: typeof SUPPLIER_TYPE_RN | typeof SUPPLIER_TYPE_EN | typeof SUPPLIER_TYPE_PCW | typeof SUPPLIER_TYPE_HCA;
   contactPerson: ContactPerson;
-  gender: Gender;
+  gender: typeof GENDER_M | typeof GENDER_F;
   dateOfBirth: DateOfBirth;
   hkid: string;
   address: Address;
