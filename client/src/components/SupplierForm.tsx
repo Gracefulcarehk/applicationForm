@@ -185,10 +185,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     severity: 'success',
   });
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Track viewport height changes
   useEffect(() => {
@@ -326,8 +325,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
   const handleSubmit = useCallback(async (values: SupplierFormData) => {
     try {
-      setIsSubmitting(true);
-      setError(null);
+      setSubmitting(true);
       setUploadProgress(0);
 
       const formData = new FormData();
@@ -349,10 +347,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       });
 
       if (response.success) {
-        setSuccessMessage('Application submitted successfully!');
-        setTimeout(() => {
-          navigate('/thank-you');
-        }, 2000);
+        navigate('/thank-you');
       } else {
         setError(response.error || config.messages.errors.uploadFailed);
       }
@@ -360,7 +355,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       console.error('Error submitting form:', error);
       setError(error instanceof Error ? error.message : config.messages.errors.uploadFailed);
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   }, [navigate]);
 
@@ -430,7 +425,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
           borderBottom: isScrolled ? '1px solid rgba(0, 0, 0, 0.12)' : 'none',
         }}
       >
-        申請人資料 Applicant Information
+        供應商申請表 Supplier Application Form
       </Typography>
       <Formik
         initialValues={initialValues}
