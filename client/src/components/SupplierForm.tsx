@@ -11,7 +11,7 @@ import {
   Snackbar,
   Alert
 } from '@mui/material';
-import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched } from 'formik';
+import { Formik, Form, Field, FieldArray, FormikErrors } from 'formik';
 import * as Yup from 'yup';
 import { SupplierFormData, Certification } from '../types/supplier';
 import { SUPPLIER_TYPE_RN, GENDER_M, supplierTypeOptions, genderOptions } from '../types/enums';
