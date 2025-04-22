@@ -15,11 +15,12 @@ const app = express();
 const corsOptions = {
   origin: [
     'https://31c48c74.applicationform-s7q.pages.dev',
+    'https://014268e1.applicationform-s7q.pages.dev',
     'https://wemixtech.com',
     'https://www.wemixtech.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'Referer', 'User-Agent', 'sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform'],
   credentials: true,
   maxAge: 86400 // 24 hours
 };

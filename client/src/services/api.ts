@@ -54,49 +54,14 @@ export const supplierApi = {
     await api.delete(`${config.api.endpoints.suppliers}/${id}`);
   },
 
-  createSupplier: async (
-    formData: FormData,
-    onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
-  ): Promise<CreateSupplierResponse> => {
-    try {
-      const response = await api.post<CreateSupplierResponse>(
-        config.api.endpoints.suppliers,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-          onUploadProgress,
-          timeout: config.api.timeout.upload,
-        }
-      );
-
-      // If cleanup is required, attempt to clean up temporary files
-      if (response.data.cleanupRequired) {
-        try {
-          await api.post(config.api.endpoints.cleanup, {
-            formData: formData,
-          });
-        } catch (cleanupError) {
-          console.error('Cleanup failed:', cleanupError);
-          // Don't throw the error as the main operation succeeded
-        }
-      }
-
-      return response.data;
-    } catch (error) {
-      console.error('Error creating supplier:', error);
-      if (axios.isAxiosError(error)) {
-        if (error.code === 'ECONNABORTED') {
-          throw new Error(config.messages.errors.timeout);
-        }
-        if (error.response?.status === 413) {
-          throw new Error(config.messages.errors.fileTooLarge);
-        }
-        throw new Error(error.response?.data?.error || config.messages.errors.uploadFailed);
-      }
-      throw error;
-    }
+  createSupplier: async (formData: FormData, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void) => {
+    const response = await api.post<CreateSupplierResponse>(config.api.endpoints.suppliers, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress,
+    });
+    return response.data;
   },
 };
 
