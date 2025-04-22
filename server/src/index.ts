@@ -13,7 +13,11 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: ['https://31c48c74.applicationform-s7q.pages.dev', 'http://localhost:3000'],
+  origin: [
+    'https://31c48c74.applicationform-s7q.pages.dev',
+    'https://wemixtech.com',
+    'https://www.wemixtech.com'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
