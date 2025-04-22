@@ -356,9 +356,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
         onSubmit={handleSubmit}
       >
         {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => {
-          const certErrors = errors.certifications as FormikErrors<Certification>[] | undefined;
-          const certTouched = touched.certifications as FormikTouched<Certification>[] | undefined;
-
           return (
             <Form>
               <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
