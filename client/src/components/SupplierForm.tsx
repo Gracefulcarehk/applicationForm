@@ -14,7 +14,7 @@ import {
 import { Formik, Form, Field, FieldArray, FormikErrors, FormikTouched } from 'formik';
 import * as Yup from 'yup';
 import { SupplierFormData, Certification } from '../types/supplier';
-import { SUPPLIER_TYPE_RN, SUPPLIER_TYPE_EN, SUPPLIER_TYPE_PCW, SUPPLIER_TYPE_HCA, GENDER_M, GENDER_F, supplierTypeOptions, genderOptions } from '../types/enums';
+import { SUPPLIER_TYPE_RN, GENDER_M, supplierTypeOptions, genderOptions } from '../types/enums';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
