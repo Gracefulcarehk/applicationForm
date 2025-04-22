@@ -267,6 +267,14 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     setFieldValue('idCardFileUrl', '');
   };
 
+  const handleBankChange = (event: React.ChangeEvent<HTMLInputElement>, setFieldValue: (field: string, value: any) => void) => {
+    const selectedBank = hongKongBanks.find(bank => bank.name === event.target.value);
+    if (selectedBank) {
+      setFieldValue('bankAccount.bank', selectedBank.name);
+      setFieldValue('bankAccount.bankCode', selectedBank.code);
+    }
+  };
+
   const handleSubmit = useCallback(async (values: SupplierFormData) => {
     try {
       setUploadProgress(0);
@@ -669,6 +677,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           select
                           label="銀行名稱 Bank"
                           name="bankAccount.bank"
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBankChange(e, setFieldValue)}
                           error={touched.bankAccount?.bank && !!errors.bankAccount?.bank}
                           helperText={touched.bankAccount?.bank && errors.bankAccount?.bank}
                         >
@@ -781,75 +790,74 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                     </Typography>
                     <FieldArray name="certifications">
                       {({ push, remove }) => (
-                        <Grid item xs={12}>
-                          <Paper elevation={3} sx={{ p: 3 }}>
-                            <Typography variant="h6" gutterBottom>
-                              Certifications
-                            </Typography>
-                            {values.certifications.map((cert, index) => (
-                              <Box key={index} sx={{ mb: 2 }}>
-                                <Grid container spacing={2}>
-                                  <Grid item xs={12} sm={6}>
-                                    <Field
-                                      as={TextField}
-                                      name={`certifications.${index}.name`}
-                                      label="Certification Name"
-                                      fullWidth
-                                      error={certTouched?.[index]?.name && Boolean(certErrors?.[index]?.name)}
-                                      helperText={certTouched?.[index]?.name && certErrors?.[index]?.name}
-                                    />
-                                  </Grid>
-                                  <Grid item xs={12} sm={6}>
-                                    <Field
-                                      as={TextField}
-                                      name={`certifications.${index}.issuingOrganization`}
-                                      label="Issuing Organization"
-                                      fullWidth
-                                      error={certTouched?.[index]?.issuingOrganization && Boolean(certErrors?.[index]?.issuingOrganization)}
-                                      helperText={certTouched?.[index]?.issuingOrganization && certErrors?.[index]?.issuingOrganization}
-                                    />
-                                  </Grid>
-                                  <Grid item xs={12} sm={6}>
-                                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                      <Field
-                                        component={DatePicker}
-                                        name={`certifications.${index}.issueDate`}
-                                        label="Issue Date"
-                                        format="yyyy-MM-dd"
-                                        slotProps={{
-                                          textField: {
-                                            fullWidth: true,
-                                            error: certTouched?.[index]?.issueDate && Boolean(certErrors?.[index]?.issueDate),
-                                            helperText: certTouched?.[index]?.issueDate && certErrors?.[index]?.issueDate,
-                                          },
-                                        }}
-                                      />
-                                    </LocalizationProvider>
-                                  </Grid>
-                                  <Grid item xs={12} sm={6}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                                      <IconButton
-                                        onClick={() => remove(index)}
-                                        color="error"
-                                        sx={{ ml: 1 }}
-                                      >
-                                        <DeleteIcon />
-                                      </IconButton>
-                                    </Box>
-                                  </Grid>
+                        <Box>
+                          {values.certifications.map((certification, index) => (
+                            <Box key={index} sx={{ mb: 2 }}>
+                              <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6}>
+                                  <Field
+                                    name={`certifications.${index}.name`}
+                                    as={TextField}
+                                    label="證書名稱 Certificate Name"
+                                    fullWidth
+                                    error={touched.certifications?.[index]?.name && Boolean((errors.certifications?.[index] as FormikErrors<Certification>)?.name)}
+                                    helperText={touched.certifications?.[index]?.name && (errors.certifications?.[index] as FormikErrors<Certification>)?.name}
+                                  />
                                 </Grid>
-                              </Box>
-                            ))}
-                            <Button
-                              startIcon={<AddIcon />}
-                              onClick={() => push({ name: '', issuingOrganization: '', issueDate: null })}
-                              variant="outlined"
-                              sx={{ mt: 2 }}
-                            >
-                              Add Certification
-                            </Button>
-                          </Paper>
-                        </Grid>
+                                <Grid item xs={12} sm={6}>
+                                  <Field
+                                    name={`certifications.${index}.issuingOrganization`}
+                                    as={TextField}
+                                    label="頒發機構 Issuing Organization"
+                                    fullWidth
+                                    error={touched.certifications?.[index]?.issuingOrganization && Boolean((errors.certifications?.[index] as FormikErrors<Certification>)?.issuingOrganization)}
+                                    helperText={touched.certifications?.[index]?.issuingOrganization && (errors.certifications?.[index] as FormikErrors<Certification>)?.issuingOrganization}
+                                  />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                    <DatePicker
+                                      label="頒發日期 Issue Date"
+                                      value={values.certifications[index].issueDate ? parse(values.certifications[index].issueDate, 'yyyy-MM-dd', new Date()) : null}
+                                      onChange={(newValue) => {
+                                        if (newValue) {
+                                          setFieldValue(`certifications.${index}.issueDate`, format(newValue, 'yyyy-MM-dd'));
+                                        }
+                                      }}
+                                      slotProps={{
+                                        textField: {
+                                          fullWidth: true,
+                                          error: touched.certifications?.[index]?.issueDate && Boolean((errors.certifications?.[index] as FormikErrors<Certification>)?.issueDate),
+                                          helperText: touched.certifications?.[index]?.issueDate && (errors.certifications?.[index] as FormikErrors<Certification>)?.issueDate,
+                                        },
+                                      }}
+                                      maxDate={new Date()}
+                                    />
+                                  </LocalizationProvider>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                                    <IconButton
+                                      onClick={() => remove(index)}
+                                      color="error"
+                                      sx={{ ml: 1 }}
+                                    >
+                                      <DeleteIcon />
+                                    </IconButton>
+                                  </Box>
+                                </Grid>
+                              </Grid>
+                            </Box>
+                          ))}
+                          <Button
+                            startIcon={<AddIcon />}
+                            onClick={() => push({ name: '', issuingOrganization: '', issueDate: null })}
+                            variant="outlined"
+                            sx={{ mt: 2 }}
+                          >
+                            Add Certification
+                          </Button>
+                        </Box>
                       )}
                     </FieldArray>
                   </Grid>
