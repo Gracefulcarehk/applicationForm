@@ -39,17 +39,19 @@ const validationSchema = Yup.object({
     addressLine2: Yup.string(),
     district: Yup.string().required('請選擇地區 Please select district'),
   }),
-  hkid: Yup.string().required('請輸入香港身份證號碼 Please enter HKID number'),
+  hkid: Yup.string()
+    .required('請輸入香港身份證號碼 Please enter HKID number')
+    .matches(/^[A-Za-z]{1,2}\d{6}\s?\(?[0-9Aa]\)?$/, '請輸入有效的香港身份證號碼，例如 A123456(3) Please enter a valid HKID number, e.g. A123456(3)'),
   idCardFileUrl: Yup.string().required('請上傳身份證文件 Please upload ID card document'),
   dateOfBirth: Yup.object({
     day: Yup.string()
-      .matches(/^[1-9]|[12][0-9]|3[01]$/, '日期必須在1至31之間 Day must be between 1 and 31')
+      .matches(/^([1-9]|0[1-9]|[12][0-9]|3[01])$/, '日期必須在1至31之間 Day must be between 1 and 31')
       .required('請輸入日期 Please enter day'),
     month: Yup.string()
-      .matches(/^[1-9]|1[0-2]$/, '月份必須在1至12之間 Month must be between 1 and 12')
+      .matches(/^([1-9]|0[1-9]|1[0-2])$/, '月份必須在1至12之間 Month must be between 1 and 12')
       .required('請輸入月份 Please enter month'),
     year: Yup.string()
-      .matches(/^19[0-9]{2}|20[0-9]{2}$/, '年份必須在1900至今年之間 Year must be between 1900 and current year')
+      .matches(/^(19[0-9]{2}|20[0-9]{2})$/, '年份必須在1900至今年之間 Year must be between 1900 and current year')
       .required('請輸入年份 Please enter year'),
   }).required('請輸入出生日期 Please enter date of birth'),
   professionalCertifications: Yup.array().of(
@@ -74,7 +76,6 @@ const validationSchema = Yup.object({
 
 interface SupplierFormProps {
   initialValues?: Omit<Supplier, '_id'>;
-  onSubmit?: (values: Omit<Supplier, '_id'>) => Promise<void>;
   submitButtonText?: string;
 }
 
@@ -174,7 +175,6 @@ const hongKongDistricts = [
 
 const SupplierForm: React.FC<SupplierFormProps> = ({
   initialValues = defaultValues,
-  onSubmit,
   submitButtonText = '提交申請 Submit Application',
 }) => {
   const theme = useTheme();
@@ -341,7 +341,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       formData.append('supplierType', values.supplierType);
       formData.append('gender', values.gender);
       formData.append('hkid', values.hkid);
-      formData.append('status', values.status);
 
       // Add contact person fields
       formData.append('contactPerson[nameEn]', values.contactPerson.nameEn);
@@ -385,11 +384,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
         }
       });
 
-      if (onSubmit) {
-        await onSubmit(values);
-      } else {
-        await supplierApi.createSupplier(formData);
-      }
+      await supplierApi.createSupplier(formData);
       
       // Show success message
       setSnackbar({

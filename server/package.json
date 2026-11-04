@@ -2,35 +2,47 @@
   "name": "server",
   "version": "1.0.0",
   "description": "GracefulCare Backend Server",
-  "main": "src/index.js",
-  "type": "module",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "deploy": "wrangler deploy",
-    "build": "tsc"
+    "start": "node dist/index.js",
+    "dev": "nodemon",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/src"
+    ]
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "@aws-sdk/client-s3": "^3.700.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.0",
+    "express-rate-limit": "^7.5.0",
     "mongoose": "^7.0.3",
-    "multer": "^1.4.5-lts.1",
-    "winston": "^3.8.2",
-    "hono": "^3.3.2"
+    "multer": "^2.0.2",
+    "nodemailer": "^10.3.1",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20230807.0",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.0",
     "@types/multer": "^1.4.7",
-    "@types/node": "^18.15.11",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^8.0.2",
+    "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "eslint": "^8.38.0",
@@ -39,9 +51,9 @@
     "jest": "^29.5.0",
     "nodemon": "^2.0.22",
     "prettier": "^2.8.7",
+    "supertest": "^7.0.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.4",
-    "wrangler": "^3.0.0"
+    "typescript": "^5.0.4"
   }
 }

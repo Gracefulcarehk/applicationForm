@@ -73,11 +73,10 @@ AI_Web/
 ```
 
 ## API Endpoints
-- POST /suppliers - Create new caregiver application
-- GET /suppliers - Get all caregiver applications
-- GET /suppliers/:id - Get single caregiver application
-- PUT /suppliers/:id - Update caregiver application
-- DELETE /suppliers/:id - Delete caregiver application
+- `POST /api/suppliers` – submit a caregiver application (multipart form data with documents). Files are stored in a private Cloudflare R2 bucket, the application in MongoDB, and a notification email is sent to `NOTIFY_TO`.
+- `GET /health` – health check for the hosting platform
+
+There are intentionally no endpoints for reading, updating or deleting applications. Review applications in MongoDB Atlas and Cloudflare R2.
 
 ## Setup Instructions
 
@@ -107,16 +106,8 @@ AI_Web/
    ```
 
 3. Set up environment variables:
-   - Create `.env` files in both client and server directories
-   - Server .env example:
-     ```
-     PORT=5003
-     MONGODB_URI=mongodb://localhost:27017/gracefulcare
-     ```
-   - Client .env example:
-     ```
-     REACT_APP_API_URL=http://localhost:5003
-     ```
+   - Server: copy `server/.env.example` to `server/.env` and fill in MongoDB, Cloudflare R2 and Gmail SMTP settings
+   - Client: copy `client/.env.example` to `client/.env.local` (`REACT_APP_API_URL`, required)
 
 4. Start the development servers:
    ```bash

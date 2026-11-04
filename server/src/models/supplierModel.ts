@@ -1,8 +1,12 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export const SUPPLIER_TYPES = ['RN', 'EN', 'PCW', 'HCA'] as const;
+export const GENDERS = ['M', 'F'] as const;
+
 export interface IProfessionalCertification {
   name: string;
-  fileUrl: string;
+  // Object key in the private R2 bucket
+  fileKey: string;
   expiryDate: string;
   uploadDate: Date;
 }
@@ -12,7 +16,7 @@ export interface IBankAccount {
   bankCode: string;
   accountNumber: string;
   cardHolderName: string;
-  fileUrl: string;
+  fileKey: string;
 }
 
 export interface IAddress {
@@ -34,18 +38,20 @@ export interface IDateOfBirth {
   year: string;
 }
 
-export interface ISupplier extends Document {
-  supplierType: string;
+export interface SupplierData {
+  supplierType: (typeof SUPPLIER_TYPES)[number];
   contactPerson: IContactPerson;
-  gender: string;
+  gender: (typeof GENDERS)[number];
   address: IAddress;
   hkid: string;
-  idCardFileUrl: string;
+  idCardFileKey: string;
   dateOfBirth: IDateOfBirth;
-  documents: string[];
   professionalCertifications: IProfessionalCertification[];
   bankAccount: IBankAccount;
-  status: string;
+}
+
+export interface ISupplier extends SupplierData, Document {
+  status: 'Pending' | 'Approved' | 'Rejected';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -55,7 +61,7 @@ const supplierSchema = new Schema<ISupplier>(
     supplierType: {
       type: String,
       required: [true, '請選擇供應商類型 Please select supplier type'],
-      enum: ['RN', 'EN', 'PCW', 'HCA'],
+      enum: SUPPLIER_TYPES,
     },
     contactPerson: {
       nameEn: {
@@ -80,7 +86,7 @@ const supplierSchema = new Schema<ISupplier>(
     gender: {
       type: String,
       required: [true, '請選擇性別 Please select gender'],
-      enum: ['M', 'F'],
+      enum: GENDERS,
     },
     address: {
       street: String,
@@ -95,7 +101,7 @@ const supplierSchema = new Schema<ISupplier>(
       required: [true, '請輸入香港身份證號碼 Please enter HKID number'],
       unique: true,
     },
-    idCardFileUrl: {
+    idCardFileKey: {
       type: String,
       required: [true, '請上傳身份證文件 Please upload ID card document'],
     },
@@ -113,14 +119,13 @@ const supplierSchema = new Schema<ISupplier>(
         required: [true, '請輸入年份 Please enter year'],
       },
     },
-    documents: [String],
     professionalCertifications: [
       {
         name: {
           type: String,
           required: [true, '請輸入認證名稱 Please enter certification name'],
         },
-        fileUrl: {
+        fileKey: {
           type: String,
           required: [true, '請上傳專業認證文件 Please upload professional certification document'],
         },
@@ -151,7 +156,7 @@ const supplierSchema = new Schema<ISupplier>(
         type: String,
         required: [true, '請輸入持卡人姓名 Please enter card holder name'],
       },
-      fileUrl: {
+      fileKey: {
         type: String,
         required: [true, '請上傳銀行帳戶文件 Please upload bank account document'],
       },
@@ -164,7 +169,7 @@ const supplierSchema = new Schema<ISupplier>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-export const Supplier = mongoose.model<ISupplier>('Supplier', supplierSchema); 
+export const Supplier = mongoose.model<ISupplier>('Supplier', supplierSchema, 'applications');
