@@ -9,6 +9,10 @@ const start = async () => {
   const config = loadConfig();
 
   await mongoose.connect(config.mongodbUri, { serverSelectionTimeoutMS: 5000 });
+  // Without a database name in the URI the driver silently uses "test"
+  if (mongoose.connection.db?.databaseName === 'test') {
+    throw new Error('MONGODB_URI must include the database name, e.g. ...mongodb.net/gracefulcare?...');
+  }
   logger.info('MongoDB connected');
 
   const app = createApp({
