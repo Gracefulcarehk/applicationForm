@@ -26,7 +26,24 @@ import { supplierApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { hongKongBanks } from '../data/hongKongBanks';
 
-const validationSchema = Yup.object({
+export const HKID_PLACEHOLDER = '請按此身份證嘅格式輸入，例如 A123456(3)';
+export const HKID_REQUIRED_MESSAGE = '此欄位不能留空，請輸入';
+export const HKID_FORMAT_MESSAGE = '身份證嘅格式有誤，請檢查並重新輸入';
+
+// Same check-digit rule as the server (server/src/middleware/validateSupplier.ts)
+export const isValidHkid = (value: string) => {
+  const match = /^([A-Z]{1,2})(\d{6})\(([0-9A])\)$/.exec(value.toUpperCase());
+  if (!match) return false;
+
+  const [, letters, digits, check] = match;
+  const letterValue = (c: string) => c.charCodeAt(0) - 55; // A = 10 ... Z = 35
+  const prefix = letters.length === 1 ? [36, letterValue(letters)] : letters.split('').map(letterValue);
+  const sum = [...prefix, ...digits.split('').map(Number)].reduce((total, v, i) => total + v * (9 - i), 0);
+  const expected = (11 - (sum % 11)) % 11;
+  return check === (expected === 10 ? 'A' : String(expected));
+};
+
+export const validationSchema = Yup.object({
   supplierType: Yup.string().required('請選擇供應商類型 Please select supplier type'),
   contactPerson: Yup.object({
     nameEn: Yup.string().required('請輸入英文姓名 Please enter name in English'),
@@ -40,9 +57,10 @@ const validationSchema = Yup.object({
     addressLine2: Yup.string(),
     district: Yup.string().required('請選擇地區 Please select district'),
   }),
+  // 1-2 English letters, 6 digits and the check digit in brackets (10-11 characters), e.g. A123456(3)
   hkid: Yup.string()
-    .required('請輸入香港身份證號碼 Please enter HKID number')
-    .matches(/^[A-Za-z]{1,2}\d{6}\s?\(?[0-9Aa]\)?$/, '請輸入有效的香港身份證號碼，例如 A123456(3) Please enter a valid HKID number, e.g. A123456(3)'),
+    .required(HKID_REQUIRED_MESSAGE)
+    .test('hkid', HKID_FORMAT_MESSAGE, (value) => isValidHkid(value ?? '')),
   idCardFileUrl: Yup.string().required('請上傳身份證文件 Please upload ID card document'),
   dateOfBirth: Yup.object({
     day: Yup.string()
@@ -588,6 +606,10 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   name="hkid"
                   as={TextField}
                   label="香港身份證 HKID"
+                  placeholder={HKID_PLACEHOLDER}
+                  InputLabelProps={{ shrink: true }}
+                  // Only validate on blur and submit, not while typing
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFieldValue('hkid', e.target.value, false)}
                   fullWidth
                   error={touched.hkid && Boolean(errors.hkid)}
                   helperText={touched.hkid && errors.hkid}
