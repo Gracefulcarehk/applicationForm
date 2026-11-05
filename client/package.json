@@ -50,6 +50,11 @@
     "audit:fix": "npm audit fix --force",
     "test:responsive": "node scripts/test-responsive.js"
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!axios)/"
+    ]
+  },
   "browserslist": {
     "production": [
       ">0.2%",

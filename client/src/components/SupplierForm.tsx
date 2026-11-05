@@ -24,8 +24,26 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { supplierApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { hongKongBanks } from '../data/hongKongBanks';
 
-const validationSchema = Yup.object({
+export const HKID_PLACEHOLDER = '請按此身份證嘅格式輸入，例如 A123456(3)';
+export const HKID_REQUIRED_MESSAGE = '此欄位不能留空，請輸入';
+export const HKID_FORMAT_MESSAGE = '身份證嘅格式有誤，請檢查並重新輸入';
+
+// Same check-digit rule as the server (server/src/middleware/validateSupplier.ts)
+export const isValidHkid = (value: string) => {
+  const match = /^([A-Z]{1,2})(\d{6})\(([0-9A])\)$/.exec(value.toUpperCase());
+  if (!match) return false;
+
+  const [, letters, digits, check] = match;
+  const letterValue = (c: string) => c.charCodeAt(0) - 55; // A = 10 ... Z = 35
+  const prefix = letters.length === 1 ? [36, letterValue(letters)] : letters.split('').map(letterValue);
+  const sum = [...prefix, ...digits.split('').map(Number)].reduce((total, v, i) => total + v * (9 - i), 0);
+  const expected = (11 - (sum % 11)) % 11;
+  return check === (expected === 10 ? 'A' : String(expected));
+};
+
+export const validationSchema = Yup.object({
   supplierType: Yup.string().required('請選擇供應商類型 Please select supplier type'),
   contactPerson: Yup.object({
     nameEn: Yup.string().required('請輸入英文姓名 Please enter name in English'),
@@ -39,17 +57,20 @@ const validationSchema = Yup.object({
     addressLine2: Yup.string(),
     district: Yup.string().required('請選擇地區 Please select district'),
   }),
-  hkid: Yup.string().required('請輸入香港身份證號碼 Please enter HKID number'),
+  // 1-2 English letters, 6 digits and the check digit in brackets (10-11 characters), e.g. A123456(3)
+  hkid: Yup.string()
+    .required(HKID_REQUIRED_MESSAGE)
+    .test('hkid', HKID_FORMAT_MESSAGE, (value) => isValidHkid(value ?? '')),
   idCardFileUrl: Yup.string().required('請上傳身份證文件 Please upload ID card document'),
   dateOfBirth: Yup.object({
     day: Yup.string()
-      .matches(/^[1-9]|[12][0-9]|3[01]$/, '日期必須在1至31之間 Day must be between 1 and 31')
+      .matches(/^([1-9]|0[1-9]|[12][0-9]|3[01])$/, '日期必須在1至31之間 Day must be between 1 and 31')
       .required('請輸入日期 Please enter day'),
     month: Yup.string()
-      .matches(/^[1-9]|1[0-2]$/, '月份必須在1至12之間 Month must be between 1 and 12')
+      .matches(/^([1-9]|0[1-9]|1[0-2])$/, '月份必須在1至12之間 Month must be between 1 and 12')
       .required('請輸入月份 Please enter month'),
     year: Yup.string()
-      .matches(/^19[0-9]{2}|20[0-9]{2}$/, '年份必須在1900至今年之間 Year must be between 1900 and current year')
+      .matches(/^(19[0-9]{2}|20[0-9]{2})$/, '年份必須在1900至今年之間 Year must be between 1900 and current year')
       .required('請輸入年份 Please enter year'),
   }).required('請輸入出生日期 Please enter date of birth'),
   professionalCertifications: Yup.array().of(
@@ -74,41 +95,9 @@ const validationSchema = Yup.object({
 
 interface SupplierFormProps {
   initialValues?: Omit<Supplier, '_id'>;
-  onSubmit?: (values: Omit<Supplier, '_id'>) => Promise<void>;
   submitButtonText?: string;
 }
 
-const hongKongBanks = [
-  { name: 'HSBC (Hongkong and Shanghai Banking Corporation)', nameCn: '滙豐銀行', code: '004' },
-  { name: 'Bank of China (Hong Kong)', nameCn: '中國銀行(香港)', code: '012' },
-  { name: 'Standard Chartered Bank (Hong Kong)', nameCn: '渣打銀行(香港)', code: '003' },
-  { name: 'Hang Seng Bank', nameCn: '恒生銀行', code: '024' },
-  { name: 'Bank of East Asia', nameCn: '東亞銀行', code: '015' },
-  { name: 'DBS Bank (Hong Kong)', nameCn: '星展銀行(香港)', code: '016' },
-  { name: 'Citibank (Hong Kong)', nameCn: '花旗銀行(香港)', code: '006' },
-  { name: 'China Construction Bank (Asia)', nameCn: '中國建設銀行(亞洲)', code: '009' },
-  { name: 'Industrial and Commercial Bank of China (Asia)', nameCn: '中國工商銀行(亞洲)', code: '072' },
-  { name: 'Agricultural Bank of China (Hong Kong)', nameCn: '中國農業銀行(香港)', code: '010' },
-  { name: 'Bank of Communications (Hong Kong)', nameCn: '交通銀行(香港)', code: '027' },
-  { name: 'China Merchants Bank (Hong Kong)', nameCn: '招商銀行(香港)', code: '238' },
-  { name: 'Nanyang Commercial Bank', nameCn: '南洋商業銀行', code: '025' },
-  { name: 'Wing Lung Bank', nameCn: '永隆銀行', code: '020' },
-  { name: 'Chiyu Banking Corporation', nameCn: '集友銀行', code: '039' },
-  { name: 'Public Bank (Hong Kong)', nameCn: '大眾銀行(香港)', code: '026' },
-  { name: 'Chong Hing Bank', nameCn: '創興銀行', code: '041' },
-  { name: 'Shanghai Commercial Bank', nameCn: '上海商業銀行', code: '025' },
-  { name: 'Tai Sang Bank', nameCn: '大生銀行', code: '052' },
-  { name: 'Tai Yau Bank', nameCn: '大有銀行', code: '053' },
-  { name: 'Wing Hang Bank', nameCn: '永亨銀行', code: '035' },
-  { name: 'CITIC Bank International', nameCn: '中信銀行國際', code: '018' },
-  { name: 'China CITIC Bank International', nameCn: '中信銀行國際', code: '018' },
-  { name: 'China Minsheng Banking Corporation (Hong Kong)', nameCn: '中國民生銀行(香港)', code: '353' },
-  { name: 'China Zheshang Bank (Hong Kong)', nameCn: '浙商銀行(香港)', code: '365' },
-  { name: 'China Guangfa Bank (Hong Kong)', nameCn: '廣發銀行(香港)', code: '358' },
-  { name: 'China Everbright Bank (Hong Kong)', nameCn: '中國光大銀行(香港)', code: '359' },
-  { name: 'China Bohai Bank (Hong Kong)', nameCn: '渤海銀行(香港)', code: '361' },
-  { name: 'China Huishang Bank (Hong Kong)', nameCn: '徽商銀行(香港)', code: '362' },
-];
 
 const defaultValues: Omit<Supplier, '_id'> = {
   supplierType: 'RN',
@@ -174,7 +163,6 @@ const hongKongDistricts = [
 
 const SupplierForm: React.FC<SupplierFormProps> = ({
   initialValues = defaultValues,
-  onSubmit,
   submitButtonText = '提交申請 Submit Application',
 }) => {
   const theme = useTheme();
@@ -341,7 +329,6 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
       formData.append('supplierType', values.supplierType);
       formData.append('gender', values.gender);
       formData.append('hkid', values.hkid);
-      formData.append('status', values.status);
 
       // Add contact person fields
       formData.append('contactPerson[nameEn]', values.contactPerson.nameEn);
@@ -385,11 +372,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
         }
       });
 
-      if (onSubmit) {
-        await onSubmit(values);
-      } else {
-        await supplierApi.createSupplier(formData);
-      }
+      await supplierApi.createSupplier(formData);
       
       // Show success message
       setSnackbar({
@@ -623,6 +606,10 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   name="hkid"
                   as={TextField}
                   label="香港身份證 HKID"
+                  placeholder={HKID_PLACEHOLDER}
+                  InputLabelProps={{ shrink: true }}
+                  // Only validate on blur and submit, not while typing
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFieldValue('hkid', e.target.value, false)}
                   fullWidth
                   error={touched.hkid && Boolean(errors.hkid)}
                   helperText={touched.hkid && errors.hkid}

@@ -20,7 +20,8 @@ export const errorHandler = (
   err: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  // Express only treats 4-argument middleware as an error handler
+  _next: NextFunction
 ) => {
   if (err instanceof AppError) {
     logger.error(`Operational Error: ${err.message}`);

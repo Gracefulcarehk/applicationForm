@@ -1,68 +1,96 @@
-import { Request, Response, NextFunction } from 'express';
-import { Supplier } from '../models/supplierModel';
+import { NextFunction, Request, Response } from 'express';
+import { Types } from 'mongoose';
+import { Supplier, SupplierData } from '../models/supplierModel';
 import { AppError } from '../middleware/errorHandler';
+import { ParsedApplication, UploadedFile } from '../middleware/validateSupplier';
+import { FileStorage } from '../services/storage';
+import { Mailer, StoredFile } from '../services/mailer';
 import { logger } from '../utils/logger';
 
-export const supplierController = {
-  async createSupplier(req: Request, res: Response, next: NextFunction) {
-    try {
-      const supplier = new Supplier(req.body);
-      await supplier.save();
-      logger.info('Supplier created successfully:', supplier);
-      res.status(201).json(supplier);
-    } catch (error) {
-      next(new AppError('Failed to create supplier', 500));
-    }
-  },
+export interface SupplierControllerDeps {
+  storage: FileStorage;
+  mailer: Mailer;
+}
 
-  async getSuppliers(req: Request, res: Response, next: NextFunction) {
-    try {
-      const suppliers = await Supplier.find();
-      res.json(suppliers);
-    } catch (error) {
-      next(new AppError('Failed to fetch suppliers', 500));
-    }
-  },
+const MIME_EXTENSIONS: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/heic': 'heic',
+  'image/webp': 'webp',
+};
 
-  async getSupplierById(req: Request, res: Response, next: NextFunction) {
-    try {
-      const supplier = await Supplier.findById(req.params.id);
-      if (!supplier) {
-        return next(new AppError('Supplier not found', 404));
+const fileKey = (id: string, label: string, file: UploadedFile) =>
+  `applications/${id}/${label}.${MIME_EXTENSIONS[file.mimetype] ?? 'bin'}`;
+
+const isDuplicateKeyError = (error: unknown) =>
+  typeof error === 'object' && error !== null && (error as { code?: number }).code === 11000;
+
+export const createSupplierController = ({ storage, mailer }: SupplierControllerDeps) => ({
+  async createSupplier(_req: Request, res: Response, next: NextFunction) {
+    const { fields, files } = res.locals.application as ParsedApplication;
+    const id = new Types.ObjectId();
+    const idString = id.toHexString();
+
+    const stored: StoredFile[] = [
+      { label: 'id-card', file: files.idCard },
+      { label: 'bank', file: files.bank },
+      ...files.certifications.map((file, i) => ({ label: `certification-${i + 1}`, file })),
+    ].map((f) => ({ ...f, key: fileKey(idString, f.label, f.file) }));
+
+    const uploaded: string[] = [];
+    const cleanUp = async () => {
+      try {
+        await storage.remove(uploaded);
+      } catch (error) {
+        logger.error(`Failed to clean up files for application ${idString}`, { error });
       }
-      res.json(supplier);
-    } catch (error) {
-      next(new AppError('Failed to fetch supplier', 500));
-    }
-  },
+    };
 
-  async updateSupplier(req: Request, res: Response, next: NextFunction) {
+    let data: SupplierData;
     try {
-      const supplier = await Supplier.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true, runValidators: true }
-      );
-      if (!supplier) {
-        return next(new AppError('Supplier not found', 404));
+      for (const { key, file } of stored) {
+        await storage.upload(key, file.buffer, file.mimetype);
+        uploaded.push(key);
       }
-      logger.info('Supplier updated successfully:', supplier);
-      res.json(supplier);
-    } catch (error) {
-      next(new AppError('Failed to update supplier', 500));
-    }
-  },
 
-  async deleteSupplier(req: Request, res: Response, next: NextFunction) {
-    try {
-      const supplier = await Supplier.findByIdAndDelete(req.params.id);
-      if (!supplier) {
-        return next(new AppError('Supplier not found', 404));
-      }
-      logger.info('Supplier deleted successfully:', supplier);
-      res.status(204).send();
+      data = {
+        ...fields,
+        idCardFileKey: stored[0].key,
+        bankAccount: { ...fields.bankAccount, fileKey: stored[1].key },
+        professionalCertifications: fields.professionalCertifications.map((cert, i) => ({
+          ...cert,
+          fileKey: stored[i + 2].key,
+        })),
+      };
+      await new Supplier({ _id: id, ...data }).save();
     } catch (error) {
-      next(new AppError('Failed to delete supplier', 500));
+      await cleanUp();
+      if (isDuplicateKeyError(error)) {
+        return next(
+          new AppError(
+            '此身份證號碼或電郵已提交過申請 An application with this HKID or email already exists',
+            409,
+          ),
+        );
+      }
+      logger.error(`Failed to create application ${idString}`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return next(new AppError('提交申請時發生錯誤 Error submitting application', 500));
     }
+
+    logger.info(`Application ${idString} created`);
+
+    try {
+      await mailer.sendApplicationNotification({ id: idString, data, files: stored });
+    } catch (error) {
+      // The application is saved; staff can still find it in MongoDB.
+      logger.error(`Failed to send notification for application ${idString}`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    return res.status(201).json({ id: idString });
   },
-}; 
+});
