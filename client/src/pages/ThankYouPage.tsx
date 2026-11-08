@@ -3,7 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Button, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { brand } from '../theme';
-import { MAIN_SITE_URL } from '../data/recruitment';
+import { MAIN_SITE_URL, REVIEW_TIME } from '../data/recruitment';
 
 const ThankYouPage: React.FC = () => (
   <Box sx={{ flex: 1, bgcolor: brand.beige, px: 2, py: { xs: 6, md: 10 } }}>
@@ -23,7 +23,7 @@ const ThankYouPage: React.FC = () => (
         感謝你的申請
       </Typography>
       <Typography sx={{ mt: 2, color: brand.text }}>
-        我們已收到你的申請，團隊會於 3–5 個工作天內完成審核，並以 WhatsApp 與你聯絡。
+        我們已收到你的申請，團隊會於 {REVIEW_TIME}內完成審核，並以 WhatsApp 與你聯絡。
       </Typography>
       <Box sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2 }}>
         <Button component={RouterLink} to="/" variant="contained">

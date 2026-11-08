@@ -1,14 +1,12 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export const SUPPLIER_TYPES = ['RN', 'EN', 'PCW', 'HCA', 'PT', 'OT'] as const;
+export const SUPPLIER_TYPES = ['HH', 'PCW', 'RN', 'AH'] as const;
 // Shown in notification emails next to the code
 export const SUPPLIER_TYPE_LABELS: Record<(typeof SUPPLIER_TYPES)[number], string> = {
-  RN: '註冊護士',
-  EN: '登記護士',
+  HH: '家務助理',
   PCW: '起居照顧員',
-  HCA: '健康服務助理',
-  PT: '物理治療師',
-  OT: '職業治療師',
+  RN: '註冊護士',
+  AH: '輔助醫療人員',
 };
 export const GENDERS = ['M', 'F'] as const;
 

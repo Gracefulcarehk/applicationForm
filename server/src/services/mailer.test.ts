@@ -40,10 +40,10 @@ describe('buildNotification', () => {
   });
 
   it('shows the role with its Chinese name', () => {
-    const { subject, html } = buildNotification({ id: 'abc123', data: { ...data, supplierType: 'PT' }, files: [] });
+    const { subject, html } = buildNotification({ id: 'abc123', data: { ...data, supplierType: 'AH' }, files: [] });
 
-    expect(subject).toContain('物理治療師 PT');
-    expect(html).toContain('物理治療師 PT');
+    expect(subject).toContain('輔助醫療人員 AH');
+    expect(html).toContain('輔助醫療人員 AH');
   });
 
   it('attaches files up to the size cap and lists the rest by R2 key', () => {

@@ -9,7 +9,7 @@ import { MAIN_SITE_URL } from '../../data/recruitment';
 // Landing page sections; absolute so they also work from /apply and /thank-you
 export const navLinks = [
   { label: '為何加入', href: '/#why' },
-  { label: '招聘職位', href: '/#roles' },
+  { label: '現正招募', href: '/#roles' },
   { label: '申請流程', href: '/#steps' },
   { label: '常見問題', href: '/#faq' },
 ];

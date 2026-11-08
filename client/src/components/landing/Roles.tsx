@@ -3,25 +3,26 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Button, Typography } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
-import VolunteerActivismOutlinedIcon from '@mui/icons-material/VolunteerActivismOutlined';
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
 import ElderlyIcon from '@mui/icons-material/Elderly';
+import CleaningServicesOutlinedIcon from '@mui/icons-material/CleaningServicesOutlined';
 import Section from './Section';
 import { brand } from '../../theme';
 import { roles, RoleIcon } from '../../data/recruitment';
 
 const icons: Record<RoleIcon, typeof ElderlyIcon> = {
+  housework: CleaningServicesOutlinedIcon,
+  care: ElderlyIcon,
   nurse: MedicalServicesOutlinedIcon,
-  care: VolunteerActivismOutlinedIcon,
   rehab: AccessibilityNewIcon,
-  daily: ElderlyIcon,
 };
 
-const List: React.FC<{ title: string; items: string[]; check?: boolean }> = ({ title, items, check }) => (
+const List: React.FC<{ title: string; intro?: string; items: string[]; check?: boolean }> = ({ title, intro, items, check }) => (
   <Box>
     <Typography variant="h5" component="h4" sx={{ color: brand.blue }}>
       {title}
     </Typography>
+    {intro && <Typography sx={{ mt: 1, color: brand.text }}>{intro}</Typography>}
     <Box component="ul" sx={{ m: 0, mt: 1, p: 0, listStyle: 'none' }}>
       {items.map((item) => (
         <Box component="li" key={item} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, py: 0.5, color: brand.text }}>
@@ -44,10 +45,10 @@ const Roles: React.FC = () => {
   const Icon = icons[role.icon];
 
   return (
-    <Section id="roles" bg={brand.beige} title="招聘職位" intro="我們正招聘以下職位，選擇職位了解入職要求及工作範圍。">
+    <Section id="roles" bg={brand.beige} title="現正招募" intro="選擇職位，了解入職要求及工作內容。">
       <Box
         role="tablist"
-        aria-label="招聘職位"
+        aria-label="現正招募"
         sx={{
           display: 'flex',
           gap: 1.5,
@@ -137,8 +138,8 @@ const Roles: React.FC = () => {
               {role.englishName}
             </Box>
           </Typography>
-          <List title="入職要求" items={role.requirements} check />
-          <List title="工作範圍" items={role.scope} />
+          <List title="入職要求" intro={role.qualificationsIntro} items={role.qualifications} check />
+          <List title="工作內容" items={role.scope} />
           <Box>
             <Button component={RouterLink} to="/apply" variant="contained">
               申請此職位

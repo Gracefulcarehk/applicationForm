@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Link, Typography } from '@mui/material';
 import SupplierForm from '../components/SupplierForm';
 import { brand } from '../theme';
+import { REVIEW_TIME } from '../data/recruitment';
 
 const SupplierApplication: React.FC = () => (
   <Box sx={{ flex: 1, bgcolor: brand.beige, pb: { xs: 4, md: 8 } }}>
@@ -10,7 +11,7 @@ const SupplierApplication: React.FC = () => (
         護理人員申請表
       </Typography>
       <Typography sx={{ mt: 1, color: brand.text }}>
-        請填妥以下資料並上載所需文件，我們會於 3–5 個工作天內完成審核。有疑問？
+        請填妥以下資料並上載所需文件，我們會於 {REVIEW_TIME}內完成審核。有疑問？
         <Link href="/#faq" sx={{ color: brand.orange }}>
           查看常見問題
         </Link>

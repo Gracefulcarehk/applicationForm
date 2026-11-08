@@ -73,7 +73,7 @@ describe('HKID field', () => {
 });
 
 describe('Position field', () => {
-  test('offers all six roles including physiotherapist and occupational therapist', () => {
+  test('offers the four recruited roles', () => {
     render(
       <MemoryRouter>
         <SupplierForm />
@@ -84,7 +84,7 @@ describe('Position field', () => {
     if (!select) throw new Error('position select not found');
     fireEvent.mouseDown(select);
     const options = screen.getAllByRole('option').map((option) => option.getAttribute('data-value'));
-    expect(options).toEqual(['RN', 'EN', 'PCW', 'HCA', 'PT', 'OT']);
-    expect(screen.getByRole('option', { name: '物理治療師 Physiotherapist (PT)' })).toBeInTheDocument();
+    expect(options).toEqual(['HH', 'PCW', 'RN', 'AH']);
+    expect(screen.getByRole('option', { name: '輔助醫療人員 Allied Health Professional (AH)' })).toBeInTheDocument();
   });
 });

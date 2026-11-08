@@ -6,7 +6,7 @@ import { brand } from '../../theme';
 import { requirements } from '../../data/recruitment';
 
 const Requirements: React.FC = () => (
-  <Section id="requirements" title="申請資格及所需文件" intro="申請前請準備好以下資料及文件。">
+  <Section id="requirements" title="加入團隊需要具備什麼？">
     <Box
       component="ul"
       sx={{
