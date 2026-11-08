@@ -71,3 +71,20 @@ describe('HKID field', () => {
     await waitFor(() => expect(screen.queryByText(HKID_FORMAT_MESSAGE)).not.toBeInTheDocument());
   });
 });
+
+describe('Position field', () => {
+  test('offers all six roles including physiotherapist and occupational therapist', () => {
+    render(
+      <MemoryRouter>
+        <SupplierForm />
+      </MemoryRouter>
+    );
+    // MUI renders the clickable select just before its hidden input
+    const select = document.querySelector('input[name="supplierType"]')?.previousElementSibling;
+    if (!select) throw new Error('position select not found');
+    fireEvent.mouseDown(select);
+    const options = screen.getAllByRole('option').map((option) => option.getAttribute('data-value'));
+    expect(options).toEqual(['RN', 'EN', 'PCW', 'HCA', 'PT', 'OT']);
+    expect(screen.getByRole('option', { name: '物理治療師 Physiotherapist (PT)' })).toBeInTheDocument();
+  });
+});

@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 import { Config } from '../config';
-import { SupplierData } from '../models/supplierModel';
+import { SUPPLIER_TYPE_LABELS, SupplierData } from '../models/supplierModel';
 import { UploadedFile } from '../middleware/validateSupplier';
 
 // Gmail rejects messages over 25MB; keep attachments well below that.
@@ -30,6 +30,7 @@ const row = (label: string, value: string) =>
 
 export const buildNotification = ({ id, data, files }: ApplicationNotification) => {
   const { contactPerson: c, address: a, dateOfBirth: d, bankAccount: b } = data;
+  const role = `${SUPPLIER_TYPE_LABELS[data.supplierType]} ${data.supplierType}`;
 
   const attachments: { filename: string; content: Buffer; contentType: string }[] = [];
   const notAttached: StoredFile[] = [];
@@ -49,7 +50,7 @@ export const buildNotification = ({ id, data, files }: ApplicationNotification) 
 
   const rows = [
     row('申請編號 Application ID', id),
-    row('職級 Type', data.supplierType),
+    row('職級 Type', role),
     row('英文姓名 Name (EN)', c.nameEn),
     row('中文姓名 Name (CN)', c.nameCn),
     row('電郵 Email', c.email),
@@ -74,7 +75,7 @@ export const buildNotification = ({ id, data, files }: ApplicationNotification) 
     : '';
 
   return {
-    subject: `新護理人員申請 New caregiver application – ${c.nameCn} ${c.nameEn} (${data.supplierType})`,
+    subject: `新護理人員申請 New caregiver application – ${c.nameCn} ${c.nameEn} (${role})`,
     html: `<p>收到新的護理人員申請。A new caregiver application was submitted.</p><table>${rows}</table>${missing}`,
     attachments,
   };

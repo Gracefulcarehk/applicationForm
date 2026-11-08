@@ -39,6 +39,13 @@ describe('buildNotification', () => {
     expect(html).not.toContain('<b>Tai</b>');
   });
 
+  it('shows the role with its Chinese name', () => {
+    const { subject, html } = buildNotification({ id: 'abc123', data: { ...data, supplierType: 'PT' }, files: [] });
+
+    expect(subject).toContain('物理治療師 PT');
+    expect(html).toContain('物理治療師 PT');
+  });
+
   it('attaches files up to the size cap and lists the rest by R2 key', () => {
     const files = [stored('id-card', 4 * 1024 * 1024), stored('bank', MAX_ATTACHMENT_BYTES), stored('certification-1', 1024)];
 

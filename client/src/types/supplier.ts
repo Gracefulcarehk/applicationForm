@@ -32,7 +32,7 @@ export interface ProfessionalCertification {
   uploadDate: Date;
 }
 
-export type SupplierType = 'RN' | 'EN' | 'PCW' | 'HCA';
+export type SupplierType = 'RN' | 'EN' | 'PCW' | 'HCA' | 'PT' | 'OT';
 export type Gender = 'M' | 'F';
 
 export interface DateOfBirth {

@@ -73,6 +73,10 @@ describe('parseApplication', () => {
     expectRejected({ ...validBody(), dateOfBirth: { day: '31', month: '2', year: '1980' } }, validFiles(), /date of birth/);
   });
 
+  it.each(['PT', 'OT'])('accepts the allied health role %s', (supplierType) => {
+    expect(parseApplication({ ...validBody(), supplierType }, validFiles()).fields.supplierType).toBe(supplierType);
+  });
+
   it('rejects an unknown supplier type', () => {
     expectRejected({ ...validBody(), supplierType: 'Admin' }, validFiles(), /supplier type/);
   });
