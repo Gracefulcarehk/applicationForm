@@ -71,3 +71,20 @@ describe('HKID field', () => {
     await waitFor(() => expect(screen.queryByText(HKID_FORMAT_MESSAGE)).not.toBeInTheDocument());
   });
 });
+
+describe('Position field', () => {
+  test('offers the four recruited roles', () => {
+    render(
+      <MemoryRouter>
+        <SupplierForm />
+      </MemoryRouter>
+    );
+    // MUI renders the clickable select just before its hidden input
+    const select = document.querySelector('input[name="supplierType"]')?.previousElementSibling;
+    if (!select) throw new Error('position select not found');
+    fireEvent.mouseDown(select);
+    const options = screen.getAllByRole('option').map((option) => option.getAttribute('data-value'));
+    expect(options).toEqual(['HH', 'PCW', 'RN', 'AH']);
+    expect(screen.getByRole('option', { name: '輔助醫療人員 Allied Health Professional (AH)' })).toBeInTheDocument();
+  });
+});

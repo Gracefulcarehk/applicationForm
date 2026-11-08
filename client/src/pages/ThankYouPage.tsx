@@ -1,46 +1,40 @@
 import React from 'react';
-import { Typography, Button, Container, Paper } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
+import { Box, Button, Typography } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { brand } from '../theme';
+import { MAIN_SITE_URL, REVIEW_TIME } from '../data/recruitment';
 
-const ThankYouPage: React.FC = () => {
-  const navigate = useNavigate();
-
-  return (
-    <Container maxWidth="sm">
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 4, 
-          mt: 4,
-          textAlign: 'center',
-          '@supports (padding: max(0px))': {
-            padding: {
-              xs: `max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right))`,
-              sm: '32px',
-            },
-          },
-        }}
-      >
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-          感謝您的申請 Thank You for Your Application
-        </Typography>
-        <Typography variant="body1" paragraph>
-          我們已收到您的申請。我們的團隊將盡快審核您的資料並與您聯繫。
-        </Typography>
-        <Typography variant="body1" paragraph>
-          We have received your application. Our team will review your information and contact you shortly.
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate('/')}
-          sx={{ mt: 3 }}
-        >
-          返回主頁 Return to Home
+const ThankYouPage: React.FC = () => (
+  <Box sx={{ flex: 1, bgcolor: brand.beige, px: 2, py: { xs: 6, md: 10 } }}>
+    <Box
+      sx={{
+        maxWidth: 640,
+        mx: 'auto',
+        p: { xs: 4, md: 6 },
+        textAlign: 'center',
+        bgcolor: brand.white,
+        borderRadius: 4,
+        boxShadow: '0 8px 24px rgba(27, 36, 59, 0.06)',
+      }}
+    >
+      <CheckCircleIcon sx={{ fontSize: 64, color: brand.orange }} />
+      <Typography variant="h1" sx={{ mt: 2, color: brand.textDark, fontSize: { xs: '1.75rem', md: '2rem' } }}>
+        感謝你的申請
+      </Typography>
+      <Typography sx={{ mt: 2, color: brand.text }}>
+        我們已收到你的申請，團隊會於 {REVIEW_TIME}內完成審核，並以 WhatsApp 與你聯絡。
+      </Typography>
+      <Box sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2 }}>
+        <Button component={RouterLink} to="/" variant="contained">
+          返回招聘首頁
         </Button>
-      </Paper>
-    </Container>
-  );
-};
+        <Button href={MAIN_SITE_URL} variant="outlined" sx={{ color: brand.textDark }}>
+          瀏覽滿心醫療官網
+        </Button>
+      </Box>
+    </Box>
+  </Box>
+);
 
-export default ThankYouPage; 
+export default ThankYouPage;

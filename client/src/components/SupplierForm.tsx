@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { Formik, Form, Field, FieldArray, FormikErrors } from 'formik';
 import * as Yup from 'yup';
-import { Supplier, SupplierType, Gender, ProfessionalCertification } from '../types/supplier';
+import { Supplier, Gender, ProfessionalCertification } from '../types/supplier';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -25,6 +25,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { supplierApi } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { hongKongBanks } from '../data/hongKongBanks';
+import { roles } from '../data/recruitment';
+import { HEADER_HEIGHT } from '../theme';
 
 export const HKID_PLACEHOLDER = '請按此身份證嘅格式輸入，例如 A123456(3)';
 export const HKID_REQUIRED_MESSAGE = '此欄位不能留空，請輸入';
@@ -137,7 +139,6 @@ const defaultValues: Omit<Supplier, '_id'> = {
   status: 'Pending',
 };
 
-const supplierTypes: SupplierType[] = ['RN', 'EN', 'PCW', 'HCA'];
 const genderOptions: Gender[] = ['M', 'F'];
 
 const hongKongDistricts = [
@@ -398,9 +399,11 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
 
   return (
     <Paper 
-      elevation={3} 
+      elevation={0} 
       sx={{ 
         p: { xs: 2, sm: 3 },
+        borderRadius: 4,
+        boxShadow: '0 8px 24px rgba(27, 36, 59, 0.06)',
         minHeight: { xs: '100vh', sm: 'auto' },
         display: 'flex',
         flexDirection: 'column',
@@ -417,10 +420,11 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
         gutterBottom 
         sx={{ 
           fontSize: { xs: '1.5rem', sm: '1.75rem' },
-          fontWeight: 700,
-          color: '#000000',
+          fontWeight: 500,
+          color: '#5066A6',
           position: 'sticky',
-          top: 0,
+          // Below the sticky site header
+          top: { xs: HEADER_HEIGHT.xs, md: HEADER_HEIGHT.md },
           zIndex: 1,
           backgroundColor: 'background.paper',
           padding: { xs: '16px 0', sm: '24px 0' },
@@ -453,14 +457,14 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   name="supplierType"
                   as={TextField}
                   select
-                  label="Supplier Type"
+                  label="申請職位 Position"
                   fullWidth
                   error={touched.supplierType && Boolean(errors.supplierType)}
                   helperText={touched.supplierType && errors.supplierType}
                 >
-                  {supplierTypes.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
+                  {roles.map((role) => (
+                    <MenuItem key={role.code} value={role.code}>
+                      {role.name} {role.englishName} ({role.code})
                     </MenuItem>
                   ))}
                 </Field>
@@ -473,9 +477,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   sx={{ 
                     fontSize: { xs: '1.1rem', sm: '1.25rem' },
                     fontWeight: 700,
-                    color: '#000000',
+                    color: '#5066A6',
                     position: 'sticky',
-                    top: { xs: '60px', sm: '80px' },
+                    top: { xs: '124px', sm: '144px', md: '160px' }, // site header + sticky form title
                     zIndex: 1,
                     backgroundColor: 'background.paper',
                     padding: { xs: '8px 0', sm: '16px 0' },
@@ -631,11 +635,11 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                       component="span"
                       fullWidth
                       sx={{ 
-                        borderColor: idCardFileError ? 'error.main' : '#5D6D9B',
-                        color: '#5D6D9B',
+                        borderColor: idCardFileError ? 'error.main' : '#5066A6',
+                        color: '#5066A6',
                         '&:hover': {
-                          borderColor: '#5D6D9B',
-                          backgroundColor: 'rgba(93, 109, 155, 0.04)',
+                          borderColor: '#5066A6',
+                          backgroundColor: 'rgba(80, 102, 166, 0.04)',
                         },
                       }}
                     >
@@ -672,9 +676,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   sx={{ 
                     fontSize: { xs: '1.1rem', sm: '1.25rem' },
                     fontWeight: 700,
-                    color: '#000000',
+                    color: '#5066A6',
                     position: 'sticky',
-                    top: { xs: '60px', sm: '80px' },
+                    top: { xs: '124px', sm: '144px', md: '160px' }, // site header + sticky form title
                     zIndex: 1,
                     backgroundColor: 'background.paper',
                     padding: { xs: '8px 0', sm: '16px 0' },
@@ -731,9 +735,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   sx={{ 
                     fontSize: { xs: '1.1rem', sm: '1.25rem' },
                     fontWeight: 700,
-                    color: '#000000',
+                    color: '#5066A6',
                     position: 'sticky',
-                    top: { xs: '60px', sm: '80px' },
+                    top: { xs: '124px', sm: '144px', md: '160px' }, // site header + sticky form title
                     zIndex: 1,
                     backgroundColor: 'background.paper',
                     padding: { xs: '8px 0', sm: '16px 0' },
@@ -807,11 +811,11 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                           component="span"
                           fullWidth
                           sx={{ 
-                            borderColor: bankFileError ? 'error.main' : '#5D6D9B',
-                            color: '#5D6D9B',
+                            borderColor: bankFileError ? 'error.main' : '#5066A6',
+                            color: '#5066A6',
                             '&:hover': {
-                              borderColor: '#5D6D9B',
-                              backgroundColor: 'rgba(93, 109, 155, 0.04)',
+                              borderColor: '#5066A6',
+                              backgroundColor: 'rgba(80, 102, 166, 0.04)',
                             },
                           }}
                         >
@@ -850,9 +854,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                   sx={{ 
                     fontSize: { xs: '1.1rem', sm: '1.25rem' },
                     fontWeight: 700,
-                    color: '#000000',
+                    color: '#5066A6',
                     position: 'sticky',
-                    top: { xs: '60px', sm: '80px' },
+                    top: { xs: '124px', sm: '144px', md: '160px' }, // site header + sticky form title
                     zIndex: 1,
                     backgroundColor: 'background.paper',
                     padding: { xs: '8px 0', sm: '16px 0' },
@@ -906,11 +910,11 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
                                     component="span"
                                     fullWidth
                                     sx={{ 
-                                      borderColor: fileErrors[index] ? 'error.main' : '#5D6D9B',
-                                      color: '#5D6D9B',
+                                      borderColor: fileErrors[index] ? 'error.main' : '#5066A6',
+                                      color: '#5066A6',
                                       '&:hover': {
-                                        borderColor: '#5D6D9B',
-                                        backgroundColor: 'rgba(93, 109, 155, 0.04)',
+                                        borderColor: '#5066A6',
+                                        backgroundColor: 'rgba(80, 102, 166, 0.04)',
                                       },
                                     }}
                                   >

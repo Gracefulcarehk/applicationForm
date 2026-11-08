@@ -1,111 +1,32 @@
 import React from 'react';
-import { Box, Typography, Accordion, AccordionSummary, AccordionDetails, useMediaQuery, useTheme } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Section from './landing/Section';
+import { brand } from '../theme';
+import { faqs } from '../data/recruitment';
 
-const faqItems = [
-  {
-    question: '如何申請成為護理人員？ How to apply as a caregiver?',
-    answer: '請填寫網上申請表格，並上傳所需文件。我們會在收到申請後3-5個工作天內完成審核。Please complete the online application form and upload the required documents. We will complete the review within 3-5 working days after receiving your application.'
-  },
-  {
-    question: '需要提交哪些文件？ What documents do I need to submit?',
-    answer: '需要提交身份證明文件、專業資格證書、銀行帳戶證明等。Please submit your ID document, professional qualification certificates, and bank account proof.'
-  },
-  {
-    question: '工作時間如何安排？ How are working hours arranged?',
-    answer: '你可以根據自己的時間表選擇工作時段，我們提供彈性的工作安排。You can choose your working hours based on your schedule, we offer flexible work arrangements.'
-  },
-  {
-    question: '薪金如何計算？ How is the salary calculated?',
-    answer: '薪金根據工作時數和職位計算，並提供夜班津貼和特別節日津貼。Salary is calculated based on working hours and position, with night shift allowance and special holiday allowance provided.'
-  },
-  {
-    question: '是否需要接受培訓？ Do I need to undergo training?',
-    answer: '我們會為新入職的護理人員提供必要的培訓，確保服務質素。We provide necessary training for new caregivers to ensure service quality.'
-  }
-];
-
-const FAQSection: React.FC = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  return (
-    <Box sx={{ 
-      mt: { xs: 4, sm: 6 }, 
-      mb: { xs: 3, sm: 4 },
-      px: { xs: 2, sm: 4 }
-    }}>
-      <Typography
-        variant={isMobile ? "h6" : "h5"}
-        component="h2"
-        gutterBottom
-        sx={{
-          fontSize: isMobile ? '1.25rem' : '1.5rem',
-          fontWeight: 700,
-          color: '#000000',
-          mb: { xs: 2, sm: 3 },
-          textAlign: 'center'
-        }}
+// Underlined collapsible rows, like the FAQ on the main site's CCSV page
+const FAQSection: React.FC = () => (
+  <Section id="faq" bg={brand.greyBg} title="常見問題">
+    {faqs.map((item) => (
+      <Accordion
+        key={item.question}
+        disableGutters
+        elevation={0}
+        square
+        sx={{ bgcolor: 'transparent', borderBottom: `1px solid ${brand.outline}`, '&:before': { display: 'none' } }}
       >
-        常見問題 FAQ
-      </Typography>
-      {faqItems.map((item, index) => (
-        <Accordion 
-          key={index} 
-          sx={{ 
-            mb: { xs: 1.5, sm: 2 },
-            boxShadow: 'none',
-            border: '1px solid #e0e0e0',
-            '&:before': {
-              display: 'none',
-            },
-            '&.Mui-expanded': {
-              margin: { xs: '12px 0', sm: '16px 0' },
-            }
-          }}
-        >
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            sx={{
-              backgroundColor: '#ffffff',
-              '&:hover': {
-                backgroundColor: '#f5f5f5'
-              },
-              '& .MuiAccordionSummary-content': {
-                margin: { xs: '8px 0', sm: '12px 0' }
-              }
-            }}
-          >
-            <Typography 
-              sx={{ 
-                fontWeight: 600,
-                color: '#000000',
-                fontSize: isMobile ? '0.9rem' : '1rem'
-              }}
-            >
-              {item.question}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails
-            sx={{
-              backgroundColor: '#ffffff',
-              padding: { xs: '12px 16px 16px', sm: '16px 24px 24px' }
-            }}
-          >
-            <Typography
-              sx={{
-                color: '#666666',
-                fontSize: isMobile ? '0.85rem' : '0.95rem',
-                lineHeight: 1.6
-              }}
-            >
-              {item.answer}
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-      ))}
-    </Box>
-  );
-};
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0, py: 1 }}>
+          <Typography variant="h4" component="h3" sx={{ color: brand.text, fontSize: { xs: '1rem', md: '1.25rem' } }}>
+            {item.question}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 0, pb: 3 }}>
+          <Typography sx={{ color: brand.grey }}>{item.answer}</Typography>
+        </AccordionDetails>
+      </Accordion>
+    ))}
+  </Section>
+);
 
-export default FAQSection; 
+export default FAQSection;

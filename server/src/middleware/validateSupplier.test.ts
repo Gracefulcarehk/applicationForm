@@ -73,8 +73,12 @@ describe('parseApplication', () => {
     expectRejected({ ...validBody(), dateOfBirth: { day: '31', month: '2', year: '1980' } }, validFiles(), /date of birth/);
   });
 
-  it('rejects an unknown supplier type', () => {
-    expectRejected({ ...validBody(), supplierType: 'Admin' }, validFiles(), /supplier type/);
+  it.each(['HH', 'PCW', 'RN', 'AH'])('accepts the role %s', (supplierType) => {
+    expect(parseApplication({ ...validBody(), supplierType }, validFiles()).fields.supplierType).toBe(supplierType);
+  });
+
+  it.each(['Admin', 'EN', 'HCA'])('rejects the unknown supplier type %s', (supplierType) => {
+    expectRejected({ ...validBody(), supplierType }, validFiles(), /supplier type/);
   });
 
   it('requires the ID card file', () => {

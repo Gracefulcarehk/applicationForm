@@ -1,6 +1,13 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export const SUPPLIER_TYPES = ['RN', 'EN', 'PCW', 'HCA'] as const;
+export const SUPPLIER_TYPES = ['HH', 'PCW', 'RN', 'AH'] as const;
+// Shown in notification emails next to the code
+export const SUPPLIER_TYPE_LABELS: Record<(typeof SUPPLIER_TYPES)[number], string> = {
+  HH: '家務助理',
+  PCW: '起居照顧員',
+  RN: '註冊護士',
+  AH: '輔助醫療人員',
+};
 export const GENDERS = ['M', 'F'] as const;
 
 export interface IProfessionalCertification {
