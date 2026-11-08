@@ -105,12 +105,15 @@ const Roles: React.FC = () => {
         }}
       >
         {role.image ? (
-          <Box
-            component="img"
-            src={`${process.env.PUBLIC_URL}/img/roles/${role.image}`}
-            alt={role.name}
-            sx={{ width: '100%', height: '100%', minHeight: 240, objectFit: 'cover', display: 'block' }}
-          />
+          // Kept at the photo's 3:2 ratio so long role descriptions don't crop people out
+          <Box sx={{ p: { xs: 0, md: 4 }, pr: { md: 0 } }}>
+            <Box
+              component="img"
+              src={`${process.env.PUBLIC_URL}/img/roles/${role.image}`}
+              alt={role.name}
+              sx={{ width: '100%', aspectRatio: '3 / 2', objectFit: 'cover', display: 'block', borderRadius: { md: 3 } }}
+            />
+          </Box>
         ) : (
           <Box
             sx={{
