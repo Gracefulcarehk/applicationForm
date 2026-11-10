@@ -24,8 +24,8 @@ export const sectionInner = {
   py: { xs: 5, md: 8 },
 } as const;
 
-// Sticky header height; anchored sections scroll below it
-export const HEADER_HEIGHT = { xs: 64, md: 80 };
+// Sticky header height (same as the main site navbar); anchored sections scroll below it
+export const HEADER_HEIGHT = { xs: 60, md: 92 };
 
 const theme = createTheme({
   // The main site switches to its mobile layout below 936px

@@ -18,12 +18,14 @@ const SiteFooter: React.FC = () => (
       sx={{
         maxWidth: 1280,
         mx: 'auto',
-        px: { xs: 4, md: 5 },
+        // Same size as the main site footer (h-37 px-19 py-10, mobile min-h-[238px] px-10 py-8)
+        minHeight: { xs: 238, md: 148 },
+        px: { xs: 5, md: '76px' },
         py: { xs: 4, md: 5 },
         display: 'flex',
         flexDirection: { xs: 'column', md: 'row' },
         alignItems: { xs: 'flex-start', md: 'center' },
-        justifyContent: 'space-between',
+        justifyContent: { xs: 'flex-start', md: 'space-between' },
         gap: 3,
       }}
     >
